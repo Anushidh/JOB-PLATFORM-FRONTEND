@@ -4,8 +4,10 @@ import {
   Avatar, Dropdown, DropdownItem, DropdownSeparator, useToast,
 } from '@/components/ui';
 import { useAdminEmployees, useAdminEmployers, useSuspendUser, useReactivateUser, useDeleteUser } from '@/hooks/useAdmin';
+import { useDebounce } from '@/hooks/useDebounce';
+import { exportToExcel } from '@/lib/export';
 import type { Employee, Employer } from '@/types';
-import { Search, Users, Ban, CheckCircle, Trash2, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { Search, Users, Ban, CheckCircle, Trash2, ChevronLeft, ChevronRight, MoreHorizontal, Download } from 'lucide-react';
 
 interface UsersPageProps {
   userType: 'employees' | 'employers';
@@ -14,12 +16,13 @@ interface UsersPageProps {
 export function UsersPage({ userType }: UsersPageProps) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
 
   const role = userType === 'employees' ? 'employee' : 'employer';
   const title = userType === 'employees' ? 'Job Seekers' : 'Employers';
 
-  const employeesQuery = useAdminEmployees({ page, limit: 15, search: search || undefined });
-  const employersQuery = useAdminEmployers({ page, limit: 15, search: search || undefined });
+  const employeesQuery = useAdminEmployees({ page, limit: 15, search: debouncedSearch || undefined });
+  const employersQuery = useAdminEmployers({ page, limit: 15, search: debouncedSearch || undefined });
   const { data, isLoading } = userType === 'employees' ? employeesQuery : employersQuery;
 
   const suspendMutation = useSuspendUser();
@@ -31,7 +34,28 @@ export function UsersPage({ userType }: UsersPageProps) {
       <Stack gap={6}>
         <div className="flex items-center justify-between">
           <Text variant="h2">{title}</Text>
-          {data?.pagination && <Text variant="body-sm" color="muted">{data.pagination.total} total</Text>}
+          <div className="flex items-center gap-3">
+            {data?.data && data.data.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                leftIcon={<Download />}
+                onClick={() => {
+                  const exportData = data.data.map((u: Employee | Employer) => ({
+                    Name: `${u.firstName} ${u.lastName}`,
+                    Email: u.email,
+                    Phone: u.phone || '',
+                    Status: u.isSuspended ? 'Suspended' : u.isActive ? 'Active' : 'Inactive',
+                    Joined: new Date(u.createdAt).toLocaleDateString(),
+                  }));
+                  exportToExcel(exportData, `${userType}-export`);
+                }}
+              >
+                Export
+              </Button>
+            )}
+            {data?.pagination && <Text variant="body-sm" color="muted">{data.pagination.total} total</Text>}
+          </div>
         </div>
 
         <Input placeholder={`Search ${title.toLowerCase()}...`} leftIcon={<Search />} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
@@ -54,7 +78,7 @@ export function UsersPage({ userType }: UsersPageProps) {
               </thead>
               <tbody>
                 {data.data.map((user: Employee | Employer) => (
-                  <tr key={user._id} className="border-b border-border last:border-0">
+                  <tr key={user._id} className="border-b border-border last:border-0 hover:bg-neutral-50 cursor-pointer transition-colors" onClick={() => window.location.href = `/admin/users/${role}/${user._id}`}>
                     <td className="py-3">
                       <div className="flex items-center gap-3">
                         <Avatar size="sm" src={user.avatar} fallback={`${user.firstName} ${user.lastName}`} />

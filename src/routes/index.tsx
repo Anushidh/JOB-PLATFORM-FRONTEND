@@ -53,6 +53,8 @@ const AdminDashboardPage = lazy(() => import('@/pages/admin/DashboardPage').then
 const UsersPage = lazy(() => import('@/pages/admin/UsersPage').then(m => ({ default: m.UsersPage })));
 const JobModerationPage = lazy(() => import('@/pages/admin/JobModerationPage').then(m => ({ default: m.JobModerationPage })));
 const RevenuePage = lazy(() => import('@/pages/admin/RevenuePage').then(m => ({ default: m.RevenuePage })));
+const UserDetailPage = lazy(() => import('@/pages/admin/UserDetailPage').then(m => ({ default: m.UserDetailPage })));
+const BroadcastPage = lazy(() => import('@/pages/admin/BroadcastPage').then(m => ({ default: m.BroadcastPage })));
 
 // Lazy-loaded pages — Shared
 const MessagesPage = lazy(() => import('@/pages/shared/MessagesPage').then(m => ({ default: m.MessagesPage })));
@@ -129,8 +131,10 @@ export function AppRoutes() {
             <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/admin/employees" element={<UsersPage userType="employees" />} />
             <Route path="/admin/employers" element={<UsersPage userType="employers" />} />
+            <Route path="/admin/users/:role/:userId" element={<UserDetailPage />} />
             <Route path="/admin/jobs" element={<JobModerationPage />} />
             <Route path="/admin/revenue" element={<RevenuePage />} />
+            <Route path="/admin/broadcast" element={<BroadcastPage />} />
           </Route>
         </Route>
 

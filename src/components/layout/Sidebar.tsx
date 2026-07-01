@@ -19,6 +19,7 @@ import {
   Users,
   Sparkles,
   CreditCard,
+  Megaphone,
 } from 'lucide-react';
 import { UserRole } from '@/types';
 
@@ -91,6 +92,7 @@ function getNavItems(role: UserRole): NavItemProps[] {
         { to: '/admin/employers', icon: <Building2 />, label: 'Employers' },
         { to: '/admin/jobs', icon: <Briefcase />, label: 'Job Moderation' },
         { to: '/admin/revenue', icon: <BarChart3 />, label: 'Revenue' },
+        { to: '/admin/broadcast', icon: <Megaphone />, label: 'Broadcast' },
       ];
     default:
       return [];

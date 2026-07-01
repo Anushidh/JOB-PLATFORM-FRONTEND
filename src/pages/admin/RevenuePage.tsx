@@ -4,7 +4,8 @@ import {
   Container, Stack, Text, Button, Badge, Surface, Grid, Spinner,
 } from '@/components/ui';
 import { adminService } from '@/services/admin.service';
-import { CreditCard, TrendingUp, Users, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
+import { exportToExcel } from '@/lib/export';
+import { CreditCard, TrendingUp, Users, DollarSign, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 
 export function RevenuePage() {
   const [page, setPage] = useState(1);
@@ -40,16 +41,37 @@ export function RevenuePage() {
           <div className="flex justify-center py-8"><Spinner size="lg" /></div>
         ) : revenueStats ? (
           <Grid cols={4} gap={4} className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard icon={<DollarSign />} label="Total Revenue" value={`₹${revenueStats.totalRevenue?.toLocaleString() ?? 0}`} />
-            <StatCard icon={<TrendingUp />} label="This Month" value={`₹${revenueStats.monthlyRevenue?.toLocaleString() ?? 0}`} />
+            <StatCard icon={<DollarSign />} label="Total Revenue" value={`₹${((revenueStats.totalRevenue || 0) / 100).toLocaleString('en-IN')}`} />
+            <StatCard icon={<TrendingUp />} label="This Month" value={`₹${((revenueStats.mrr || revenueStats.monthlyRevenue || 0) / 100).toLocaleString('en-IN')}`} />
             <StatCard icon={<Users />} label="Active Subscriptions" value={revenueStats.activeSubscriptions ?? 0} />
-            <StatCard icon={<CreditCard />} label="Total Payments" value={revenueStats.totalPayments ?? 0} />
+            <StatCard icon={<CreditCard />} label="Total Payments" value={revenueStats.totalTransactions ?? revenueStats.totalPayments ?? 0} />
           </Grid>
         ) : null}
 
         {/* Payment History */}
         <Surface variant="elevated" padding="lg">
-          <Text variant="h5" className="mb-4">Payment History</Text>
+          <div className="flex items-center justify-between mb-4">
+            <Text variant="h5">Payment History</Text>
+            {payments?.data && payments.data.length > 0 && (
+              <Button
+                variant="outline"
+                size="xs"
+                leftIcon={<Download />}
+                onClick={() => {
+                  const exportData = payments.data.map((p: any) => ({
+                    User: p.user?.firstName ? `${p.user.firstName} ${p.user.lastName}` : p.user?.email || '—',
+                    Plan: p.plan,
+                    'Amount (₹)': (p.amount / 100),
+                    Status: p.status,
+                    Date: new Date(p.createdAt).toLocaleDateString(),
+                  }));
+                  exportToExcel(exportData, 'payment-history');
+                }}
+              >
+                Export
+              </Button>
+            )}
+          </div>
 
           {paymentsLoading ? (
             <div className="flex justify-center py-8"><Spinner /></div>
@@ -70,9 +92,9 @@ export function RevenuePage() {
                 <tbody>
                   {payments.data.map((payment: any) => (
                     <tr key={payment._id} className="border-b border-border last:border-0">
-                      <td className="py-3"><Text variant="body-sm">{payment.user?.email || payment.user || '—'}</Text></td>
+                      <td className="py-3"><Text variant="body-sm">{payment.user?.firstName ? `${payment.user.firstName} ${payment.user.lastName}` : payment.user?.email || '—'}</Text></td>
                       <td className="py-3"><Badge variant="primary" size="sm" className="capitalize">{payment.plan}</Badge></td>
-                      <td className="py-3"><Text variant="body-sm" className="font-medium">₹{payment.amount?.toLocaleString()}</Text></td>
+                      <td className="py-3"><Text variant="body-sm" className="font-medium">₹{(payment.amount / 100)?.toLocaleString()}</Text></td>
                       <td className="py-3">
                         <Badge variant={payment.status === 'active' ? 'success' : 'default'} size="sm">{payment.status}</Badge>
                       </td>

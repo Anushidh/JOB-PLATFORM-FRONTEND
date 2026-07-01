@@ -45,13 +45,13 @@ export function AdminLoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-950 px-6">
-      <div ref={formRef} onKeyDown={handleKeyDown} className="w-full max-w-sm">
+      <div ref={formRef} onKeyDown={handleKeyDown} className="w-full max-w-xs rounded-2xl bg-white p-8 shadow-xl">
         <div className="text-center mb-8">
           <div className="flex size-12 items-center justify-center rounded-xl bg-primary-600 mx-auto mb-4">
             <Shield className="size-6 text-white" />
           </div>
-          <Text variant="h3" className="text-white">Admin Portal</Text>
-          <Text variant="body-sm" className="text-neutral-400 mt-1">
+          <Text variant="h3">Admin Portal</Text>
+          <Text variant="body-sm" color="muted" className="mt-1">
             HireFlow administration
           </Text>
         </div>
@@ -63,7 +63,6 @@ export function AdminLoginPage() {
             placeholder="admin@hireflow.dev"
             leftIcon={<Mail />}
             error={errors.email?.message}
-            className="bg-neutral-900 border-neutral-700 text-white placeholder:text-neutral-500"
             {...register('email')}
           />
           <Input
@@ -77,7 +76,6 @@ export function AdminLoginPage() {
               </button>
             }
             error={errors.password?.message}
-            className="bg-neutral-900 border-neutral-700 text-white placeholder:text-neutral-500"
             {...register('password')}
           />
           <Button type="submit" fullWidth loading={isSubmitting} className="mt-2">
