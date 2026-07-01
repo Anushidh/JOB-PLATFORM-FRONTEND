@@ -6,8 +6,9 @@ import {
 } from '@/components/ui';
 import { useJobApplications, useUpdateApplicationStatus } from '@/hooks/useApplications';
 import { useJob } from '@/hooks/useJobs';
+import { NewMessageModal } from '@/components/NewMessageModal';
 import type { Application, Employee, Job } from '@/types';
-import { ArrowLeft, Users, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle, XCircle, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'primary' | 'success' | 'warning' | 'danger' }> = {
   applied: { label: 'Applied', variant: 'primary' },
@@ -22,6 +23,7 @@ export function EmployerApplicationsPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [page, setPage] = useState(1);
+  const [messageTarget, setMessageTarget] = useState<{ id: string; role: 'employee'; name: string } | null>(null);
 
   const { data: jobData } = useJob(jobId);
   const { data, isLoading } = useJobApplications(jobId!, { page, limit: 10, status: statusFilter || undefined });
@@ -62,6 +64,7 @@ export function EmployerApplicationsPage() {
                 key={application._id}
                 application={application}
                 onUpdateStatus={(status) => updateStatusMutation.mutate({ applicationId: application._id, status })}
+                onMessage={(applicant) => setMessageTarget({ id: applicant._id, role: 'employee', name: `${applicant.firstName} ${applicant.lastName}` })}
               />
             ))}
           </Stack>
@@ -75,11 +78,18 @@ export function EmployerApplicationsPage() {
           </div>
         )}
       </Stack>
+      <NewMessageModal
+        open={!!messageTarget}
+        onClose={() => setMessageTarget(null)}
+        recipientId={messageTarget?.id}
+        recipientRole={messageTarget?.role}
+        recipientName={messageTarget?.name}
+      />
     </Container>
   );
 }
 
-function ApplicantCard({ application, onUpdateStatus }: { application: Application; onUpdateStatus: (status: string) => void }) {
+function ApplicantCard({ application, onUpdateStatus, onMessage }: { application: Application; onUpdateStatus: (status: string) => void; onMessage: (applicant: Employee) => void }) {
   const applicant = application.applicant as Employee;
   const config = statusConfig[application.status] || statusConfig.applied;
   const appliedDate = new Date(application.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -106,6 +116,9 @@ function ApplicantCard({ application, onUpdateStatus }: { application: Applicati
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <Button variant="ghost" size="icon-xs" onClick={() => applicant && onMessage(applicant)} aria-label="Message">
+            <MessageSquare className="size-4" />
+          </Button>
           {application.status === 'applied' && (
             <>
               <Button variant="outline" size="xs" onClick={() => onUpdateStatus('shortlisted')} leftIcon={<CheckCircle />}>Shortlist</Button>

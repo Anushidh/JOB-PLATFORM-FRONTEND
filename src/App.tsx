@@ -4,6 +4,7 @@ import { ToastProvider } from '@/components/ui';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AppRoutes } from '@/routes';
 import { useAuthInit } from '@/hooks/useAuth';
+import { useSocket } from '@/hooks/useSocket';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,6 +18,7 @@ const queryClient = new QueryClient({
 
 function AuthInitializer({ children }: { children: React.ReactNode }) {
   useAuthInit();
+  useSocket();
   return <>{children}</>;
 }
 

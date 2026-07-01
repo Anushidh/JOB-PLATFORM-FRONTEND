@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import {
-  Container, Stack, Text, Button, Badge, Surface, Spinner, EmptyState, useToast,
+  Container, Stack, Text, Button, Surface, Spinner, EmptyState,
+  Modal, ModalHeader, ModalBody, ModalFooter,
 } from '@/components/ui';
 import { useSavedJobs, useUnsaveJob } from '@/hooks/useSavedJobs';
 import type { Job, Company } from '@/types';
@@ -9,11 +10,16 @@ import { Bookmark, Building2, MapPin, Trash2, ChevronLeft, ChevronRight } from '
 
 export function SavedJobsPage() {
   const [page, setPage] = useState(1);
-  const { toast } = useToast();
+  const [confirmJob, setConfirmJob] = useState<{ id: string; title: string } | null>(null);
 
   const { data, isLoading } = useSavedJobs({ page, limit: 10 });
-
   const unsaveMutation = useUnsaveJob();
+
+  const handleRemove = () => {
+    if (!confirmJob) return;
+    unsaveMutation.mutate(confirmJob.id);
+    setConfirmJob(null);
+  };
 
   return (
     <Container size="xl" className="py-6">
@@ -54,7 +60,7 @@ export function SavedJobsPage() {
                       <Link to={`/employee/jobs/${job._id}`} className="hover:underline">
                         <Text variant="subtitle" className="truncate">{job.title}</Text>
                       </Link>
-                      <div className="flex items-center gap-2 mt-0-5">
+                      <div className="flex items-center gap-2 mt-0.5">
                         <Text variant="body-sm" color="secondary">{company?.name}</Text>
                         <span className="text-foreground-muted">·</span>
                         <Text variant="caption" color="muted"><MapPin className="inline size-3" /> {job.location}</Text>
@@ -63,7 +69,7 @@ export function SavedJobsPage() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => unsaveMutation.mutate(job._id)}
+                      onClick={() => setConfirmJob({ id: job._id, title: job.title })}
                       className="text-foreground-muted hover:text-danger-600"
                       aria-label="Remove from saved"
                     >
@@ -84,6 +90,20 @@ export function SavedJobsPage() {
           </div>
         )}
       </Stack>
+
+      {/* Confirmation Modal */}
+      <Modal open={!!confirmJob} onClose={() => setConfirmJob(null)} size="sm">
+        <ModalHeader onClose={() => setConfirmJob(null)}>Remove saved job</ModalHeader>
+        <ModalBody>
+          <Text variant="body" color="secondary">
+            Are you sure you want to remove <span className="font-medium text-foreground">{confirmJob?.title}</span> from your saved jobs?
+          </Text>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="ghost" onClick={() => setConfirmJob(null)}>Cancel</Button>
+          <Button variant="danger" onClick={handleRemove} loading={unsaveMutation.isPending}>Remove</Button>
+        </ModalFooter>
+      </Modal>
     </Container>
   );
 }

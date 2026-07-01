@@ -16,7 +16,7 @@ export function UsersPage({ userType }: UsersPageProps) {
   const [search, setSearch] = useState('');
 
   const role = userType === 'employees' ? 'employee' : 'employer';
-  const title = userType === 'employees' ? 'Employees' : 'Employers';
+  const title = userType === 'employees' ? 'Job Seekers' : 'Employers';
 
   const employeesQuery = useAdminEmployees({ page, limit: 15, search: search || undefined });
   const employersQuery = useAdminEmployers({ page, limit: 15, search: search || undefined });
@@ -34,14 +34,14 @@ export function UsersPage({ userType }: UsersPageProps) {
           {data?.pagination && <Text variant="body-sm" color="muted">{data.pagination.total} total</Text>}
         </div>
 
-        <Input placeholder={`Search ${userType}...`} leftIcon={<Search />} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+        <Input placeholder={`Search ${title.toLowerCase()}...`} leftIcon={<Search />} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
 
         {isLoading ? (
           <div className="flex justify-center py-12"><Spinner size="lg" /></div>
         ) : !data?.data || data.data.length === 0 ? (
-          <EmptyState icon={<Users />} title={`No ${userType} found`} />
+          <EmptyState icon={<Users />} title={`No ${title.toLowerCase()} found`} />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-visible">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-border">

@@ -22,7 +22,35 @@ const createJobSchema = z.object({
   salaryMin: z.string().optional(),
   salaryMax: z.string().optional(),
   applicationDeadline: z.string().optional(),
-});
+}).refine(
+  (data) => {
+    if (data.salaryMin && data.salaryMax) {
+      return parseInt(data.salaryMin) <= parseInt(data.salaryMax);
+    }
+    return true;
+  },
+  { message: 'Minimum salary cannot exceed maximum salary', path: ['salaryMin'] }
+).refine(
+  (data) => {
+    if (data.salaryMin && parseInt(data.salaryMin) <= 0) return false;
+    return true;
+  },
+  { message: 'Salary must be greater than 0', path: ['salaryMin'] }
+).refine(
+  (data) => {
+    if (data.salaryMax && parseInt(data.salaryMax) <= 0) return false;
+    return true;
+  },
+  { message: 'Salary must be greater than 0', path: ['salaryMax'] }
+).refine(
+  (data) => {
+    if (data.applicationDeadline) {
+      return new Date(data.applicationDeadline) > new Date();
+    }
+    return true;
+  },
+  { message: 'Deadline must be a future date', path: ['applicationDeadline'] }
+);
 
 type FormData = z.infer<typeof createJobSchema>;
 
@@ -51,7 +79,7 @@ export function CreateJobPage() {
       skillsRequired: data.skillsRequired.split(',').map((s) => s.trim()).filter(Boolean),
       salaryMin: data.salaryMin ? parseInt(data.salaryMin) : undefined,
       salaryMax: data.salaryMax ? parseInt(data.salaryMax) : undefined,
-      applicationDeadline: data.applicationDeadline || undefined,
+      applicationDeadline: data.applicationDeadline ? new Date(data.applicationDeadline).toISOString() : undefined,
     };
     createMutation.mutate(payload);
   };

@@ -1,6 +1,8 @@
+import { useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useMutation } from '@tanstack/react-query';
 import {
   Container, Stack, Text, Button, Input, Surface, Avatar, Badge,
   Tabs, TabList, TabTrigger, TabContent, useToast,
@@ -8,8 +10,9 @@ import {
 import { useUpdateEmployerProfile, useProfileCompletion } from '@/hooks/useUsers';
 import { useChangePassword } from '@/hooks/useUsers';
 import { useAuthStore } from '@/stores/auth.store';
+import { api } from '@/lib/api';
 import type { Employer } from '@/types';
-import { Save, MapPin, Mail, Lock } from 'lucide-react';
+import { Save, Mail, Lock, Camera } from 'lucide-react';
 
 const profileSchema = z.object({
   firstName: z.string().min(2).max(50),
@@ -31,10 +34,25 @@ export function EmployerProfilePage() {
   const { user } = useAuthStore();
   const employer = user as Employer;
   const { toast } = useToast();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const { data: completionData } = useProfileCompletion();
   const updateMutation = useUpdateEmployerProfile();
   const passwordMutation = useChangePassword();
+
+  const avatarMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const { data } = await api.post('/uploads/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      return data.data;
+    },
+    onSuccess: () => {
+      toast({ variant: 'success', title: 'Avatar updated' });
+      window.location.reload();
+    },
+    onError: () => { toast({ variant: 'error', title: 'Upload failed' }); },
+  });
 
   const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -87,7 +105,17 @@ export function EmployerProfilePage() {
         {/* Profile Header */}
         <Surface variant="elevated" padding="lg">
           <div className="flex items-center gap-5">
-            <Avatar size="2xl" src={employer?.avatar} fallback={`${employer?.firstName} ${employer?.lastName}`} />
+            <div className="relative group">
+              <Avatar size="2xl" src={employer?.avatar} fallback={`${employer?.firstName} ${employer?.lastName}`} />
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              >
+                <Camera className="size-5 text-white" />
+              </button>
+              <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && avatarMutation.mutate(e.target.files[0])} />
+            </div>
             <div>
               <Text variant="h3">{employer?.firstName} {employer?.lastName}</Text>
               {employer?.position && <Text variant="body" color="secondary">{employer.position}</Text>}

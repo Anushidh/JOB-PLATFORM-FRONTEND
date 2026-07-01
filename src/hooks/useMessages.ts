@@ -33,7 +33,6 @@ export function useMessages(conversationId: string | null, params: PaginationPar
       return data.data;
     },
     enabled: !!conversationId,
-    refetchInterval: 10000,
   });
 }
 

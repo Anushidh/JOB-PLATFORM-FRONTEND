@@ -1,14 +1,17 @@
 import { useParams, Link } from 'react-router';
 import {
   Container, Stack, Text, Button, Badge, Surface, Spinner, Divider, Avatar, useToast,
+  Modal, ModalHeader, ModalBody, ModalFooter, Textarea,
 } from '@/components/ui';
 import { useJob, useSimilarJobs } from '@/hooks/useJobs';
 import { jobsService } from '@/services/jobs.service';
 import { useCheckSaved, useSaveJob, useUnsaveJob } from '@/hooks/useSavedJobs';
+import { useApplyToJob, useMyApplications } from '@/hooks/useApplications';
+import { NewMessageModal } from '@/components/NewMessageModal';
 import type { Job, Company } from '@/types';
 import {
   ArrowLeft, MapPin, Briefcase, Clock, Building2, Globe, Users, Calendar,
-  Bookmark, BookmarkCheck, ExternalLink, Share2,
+  Bookmark, BookmarkCheck, ExternalLink, Share2, Send, MessageSquare,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -16,8 +19,23 @@ export function JobDetailPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const { toast } = useToast();
   const [isSaved, setIsSaved] = useState(false);
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [coverLetter, setCoverLetter] = useState('');
 
   const { data: jobData, isLoading } = useJob(jobId);
+  const applyMutation = useApplyToJob(jobId!);
+
+  // Check if already applied
+  const { data: myApplications, isLoading: applicationsLoading } = useMyApplications({ page: 1, limit: 100 });
+  const existingApplication = myApplications?.data?.find(
+    (app) => {
+      const appJob = app.job as Job;
+      return (typeof appJob === 'string' ? appJob : appJob?._id) === jobId;
+    }
+  );
+  const hasApplied = !!existingApplication;
+  const isWithdrawn = existingApplication?.status === 'withdrawn';
 
   const { data: similarData } = useSimilarJobs(jobId);
 
@@ -132,14 +150,26 @@ export function JobDetailPage() {
               )}
 
               <div className="flex gap-3">
-                <Button size="lg" className="flex-1 sm:flex-none">
-                  Apply Now
+                <Button size="lg" className="flex-1 sm:flex-none" onClick={() => setShowApplyModal(true)} disabled={hasApplied || applicationsLoading} loading={applicationsLoading}>
+                  {isWithdrawn ? 'Withdrawn' : hasApplied ? '✓ Applied' : 'Apply Now'}
                 </Button>
-                <Button variant="outline" size="lg" onClick={handleSave}>
-                  {isSaved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleSave}
+                  leftIcon={isSaved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
+                >
                   {isSaved ? 'Saved' : 'Save'}
                 </Button>
-                <Button variant="ghost" size="icon">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast({ variant: 'success', title: 'Link copied to clipboard!' });
+                  }}
+                  aria-label="Share job"
+                >
                   <Share2 className="size-4" />
                 </Button>
               </div>
@@ -226,6 +256,9 @@ export function JobDetailPage() {
                     <Globe className="size-3" /> Visit website
                   </a>
                 )}
+                <Button variant="outline" size="xs" onClick={() => setShowMessageModal(true)} leftIcon={<MessageSquare />}>
+                  Contact Employer
+                </Button>
               </Stack>
             </Surface>
           )}
@@ -250,6 +283,57 @@ export function JobDetailPage() {
           )}
         </Stack>
       </div>
+
+      {/* Apply Modal */}
+      <Modal open={showApplyModal} onClose={() => setShowApplyModal(false)} size="md">
+        <ModalHeader onClose={() => setShowApplyModal(false)}>
+          Apply to {job.title}
+        </ModalHeader>
+        <ModalBody>
+          <Stack gap={4}>
+            <Text variant="body-sm" color="secondary">
+              Your profile and resume will be shared with <span className="font-medium text-foreground">{(job.company as Company)?.name}</span>.
+            </Text>
+            <Textarea
+              label="Cover Letter (optional)"
+              placeholder="Tell the employer why you're a great fit for this role..."
+              rows={5}
+              value={coverLetter}
+              onChange={(e) => setCoverLetter(e.target.value)}
+              hint="A personalized cover letter increases your chances"
+            />
+          </Stack>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="ghost" onClick={() => setShowApplyModal(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              applyMutation.mutate(
+                { coverLetter: coverLetter || undefined },
+                {
+                  onSuccess: () => {
+                    setShowApplyModal(false);
+                    setCoverLetter('');
+                  },
+                },
+              );
+            }}
+            loading={applyMutation.isPending}
+            leftIcon={<Send />}
+          >
+            Submit Application
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* Message Employer Modal */}
+      <NewMessageModal
+        open={showMessageModal}
+        onClose={() => setShowMessageModal(false)}
+        recipientId={typeof job.employer === 'string' ? job.employer : (job.employer as any)?._id}
+        recipientRole="employer"
+        recipientName={company?.name}
+      />
     </Container>
   );
 }

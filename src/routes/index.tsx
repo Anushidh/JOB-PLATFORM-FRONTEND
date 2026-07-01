@@ -20,6 +20,7 @@ import {
   ResetPasswordPage,
   OAuthCallbackPage,
 } from '@/pages/auth';
+import { AdminLoginPage } from '@/pages/auth/AdminLoginPage';
 
 // Lazy-loaded pages — Employee
 const EmployeeDashboardPage = lazy(() => import('@/pages/employee/DashboardPage').then(m => ({ default: m.EmployeeDashboardPage })));
@@ -40,6 +41,7 @@ const EmployerJobsPage = lazy(() => import('@/pages/employer/JobsPage').then(m =
 const CreateJobPage = lazy(() => import('@/pages/employer/CreateJobPage').then(m => ({ default: m.CreateJobPage })));
 const EmployerApplicationsPage = lazy(() => import('@/pages/employer/ApplicationsPage').then(m => ({ default: m.EmployerApplicationsPage })));
 const AllApplicationsPage = lazy(() => import('@/pages/employer/AllApplicationsPage').then(m => ({ default: m.AllApplicationsPage })));
+const EmployerJobDetailPage = lazy(() => import('@/pages/employer/JobDetailPage').then(m => ({ default: m.EmployerJobDetailPage })));
 const CompanyPage = lazy(() => import('@/pages/employer/CompanyPage').then(m => ({ default: m.CompanyPage })));
 const AnalyticsPage = lazy(() => import('@/pages/employer/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
 const EmployerAIToolsPage = lazy(() => import('@/pages/employer/AIToolsPage').then(m => ({ default: m.EmployerAIToolsPage })));
@@ -80,6 +82,7 @@ export function AppRoutes() {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
           </Route>
+          <Route path="/admin/login" element={<AdminLoginPage />} />
         </Route>
 
         {/* Employee routes */}
@@ -107,6 +110,7 @@ export function AppRoutes() {
             <Route path="/employer" element={<EmployerDashboardPage />} />
             <Route path="/employer/jobs" element={<EmployerJobsPage />} />
             <Route path="/employer/jobs/new" element={<CreateJobPage />} />
+            <Route path="/employer/jobs/:jobId" element={<EmployerJobDetailPage />} />
             <Route path="/employer/jobs/:jobId/applications" element={<EmployerApplicationsPage />} />
             <Route path="/employer/applications" element={<AllApplicationsPage />} />
             <Route path="/employer/company" element={<CompanyPage />} />

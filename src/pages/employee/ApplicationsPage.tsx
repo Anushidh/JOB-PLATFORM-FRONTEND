@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import {
   Container, Stack, Text, Badge, Surface, Spinner, EmptyState, Button,
-  Select, Tabs, TabList, TabTrigger, TabContent, useToast,
+  Select, Modal, ModalHeader, ModalBody, ModalFooter,
 } from '@/components/ui';
 import { useMyApplications, useWithdrawApplication } from '@/hooks/useApplications';
-import type { Application, Job, Company, ApplicationStatus } from '@/types';
-import { FileText, Building2, Calendar, ChevronRight, AlertCircle } from 'lucide-react';
+import type { Application, Job, Company } from '@/types';
+import { FileText, Building2, Calendar, ChevronRight } from 'lucide-react';
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'primary' | 'success' | 'warning' | 'danger' }> = {
   applied: { label: 'Applied', variant: 'primary' },
@@ -20,11 +20,17 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'primar
 export function ApplicationsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [page, setPage] = useState(1);
-  const { toast } = useToast();
+  const [confirmWithdraw, setConfirmWithdraw] = useState<{ id: string; title: string } | null>(null);
 
   const { data, isLoading } = useMyApplications({ page, limit: 10, status: statusFilter || undefined });
 
   const withdrawMutation = useWithdrawApplication();
+
+  const handleWithdraw = () => {
+    if (!confirmWithdraw) return;
+    withdrawMutation.mutate(confirmWithdraw.id);
+    setConfirmWithdraw(null);
+  };
 
   return (
     <Container size="xl" className="py-6">
@@ -84,7 +90,10 @@ export function ApplicationsPage() {
               <ApplicationCard
                 key={application._id}
                 application={application}
-                onWithdraw={() => withdrawMutation.mutate(application._id)}
+                onWithdraw={() => {
+                  const job = application.job as Job;
+                  setConfirmWithdraw({ id: application._id, title: job?.title || 'this job' });
+                }}
                 isWithdrawing={withdrawMutation.isPending}
               />
             ))}
@@ -116,6 +125,20 @@ export function ApplicationsPage() {
           </div>
         )}
       </Stack>
+
+      {/* Withdraw Confirmation */}
+      <Modal open={!!confirmWithdraw} onClose={() => setConfirmWithdraw(null)} size="sm">
+        <ModalHeader onClose={() => setConfirmWithdraw(null)}>Withdraw Application</ModalHeader>
+        <ModalBody>
+          <Text variant="body" color="secondary">
+            Are you sure you want to withdraw your application for <span className="font-medium text-foreground">{confirmWithdraw?.title}</span>? This action cannot be undone.
+          </Text>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="ghost" onClick={() => setConfirmWithdraw(null)}>Cancel</Button>
+          <Button variant="danger" onClick={handleWithdraw} loading={withdrawMutation.isPending}>Withdraw</Button>
+        </ModalFooter>
+      </Modal>
     </Container>
   );
 }

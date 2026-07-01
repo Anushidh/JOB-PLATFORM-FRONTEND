@@ -1,20 +1,32 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Container, Stack, Text, Button, Badge, Surface, Grid, Spinner, useToast,
+  Container, Stack, Text, Button, Badge, Surface, Spinner, useToast,
 } from '@/components/ui';
 import { api, type ApiResponse } from '@/lib/api';
 import type { Subscription } from '@/types';
-import { CreditCard, Check, Crown, Zap, Building2 } from 'lucide-react';
+import { Check, Crown, Zap, Building2, X } from 'lucide-react';
+import { useAuthStore } from '@/stores/auth.store';
 
 const subscriptionService = {
   getPlans: () => api.get<ApiResponse<any>>('/subscriptions/plans'),
   getMySubscription: () => api.get<ApiResponse<Subscription | null>>('/subscriptions/my-subscription'),
   createOrder: (planType: string) => api.post<ApiResponse<any>>('/subscriptions/create-order', { planType }),
+  verifyPayment: (data: any) => api.post<ApiResponse<any>>('/subscriptions/verify-payment', data),
   cancelSubscription: () => api.post<ApiResponse<any>>('/subscriptions/cancel'),
+};
+
+const featureLabels: Record<string, { label: string; check: (features: any) => boolean | string }> = {
+  jobPosts: { label: 'Job posts', check: (f) => f.maxJobPosts ? `${f.maxJobPosts} job posts` : 'Unlimited job posts' },
+  applications: { label: 'Applications', check: (f) => f.maxApplications ? `${f.maxApplications} applications/mo` : 'Unlimited applications' },
+  premiumPlacement: { label: 'Premium job placement', check: (f) => f.premiumPlacement },
+  resumeAccess: { label: 'Access candidate resumes', check: (f) => f.resumeAccess },
+  analyticsAccess: { label: 'Advanced analytics', check: (f) => f.analyticsAccess },
+  messaging: { label: 'Direct messaging', check: (f) => f.premiumPlacement }, // Premium+ have messaging
 };
 
 export function SubscriptionPage() {
   const { toast } = useToast();
+  const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
   const { data: plans, isLoading: plansLoading } = useQuery({
@@ -45,6 +57,7 @@ export function SubscriptionPage() {
   });
 
   const isLoading = plansLoading || subLoading;
+  const currentPlan = subscription?.plan || 'free';
 
   return (
     <Container size="lg" className="py-6">
@@ -52,121 +65,186 @@ export function SubscriptionPage() {
         <div>
           <Text variant="h2">Subscription</Text>
           <Text variant="body" color="secondary" className="mt-1">
-            Manage your plan and billing
+            Choose the plan that fits your hiring needs
           </Text>
         </div>
 
-        {/* Current Plan */}
-        {subscription && (
-          <Surface variant="elevated" padding="lg">
+        {/* Current Plan Banner */}
+        {subscription && subscription.status === 'active' && (
+          <Surface variant="elevated" padding="md">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="flex size-12 items-center justify-center rounded-xl bg-primary-50">
-                  <Crown className="size-6 text-primary-600" />
+                <div className="flex size-10 items-center justify-center rounded-xl bg-primary-50">
+                  <Crown className="size-5 text-primary-600" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <Text variant="h4" className="capitalize">{subscription.plan}</Text>
-                    <Badge variant={subscription.status === 'active' ? 'success' : 'default'} size="sm" dot>
-                      {subscription.status}
-                    </Badge>
+                    <Text variant="subtitle" className="capitalize">{subscription.plan} Plan</Text>
+                    <Badge variant="success" size="sm" dot>Active</Badge>
                   </div>
-                  <Text variant="body-sm" color="secondary">
-                    {subscription.status === 'active' && subscription.endDate
-                      ? `Renews on ${new Date(subscription.endDate).toLocaleDateString()}`
-                      : 'No active subscription'}
+                  <Text variant="body-sm" color="muted">
+                    Renews on {new Date(subscription.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </Text>
                 </div>
               </div>
-              {subscription.status === 'active' && (
-                <Button variant="danger-outline" size="sm" onClick={() => cancelMutation.mutate()} loading={cancelMutation.isPending}>
-                  Cancel Plan
-                </Button>
-              )}
+              <Button variant="ghost" size="sm" onClick={() => cancelMutation.mutate()} loading={cancelMutation.isPending} className="text-danger-600">
+                Cancel
+              </Button>
             </div>
           </Surface>
         )}
 
-        {/* Plans */}
+        {/* Plans Grid */}
         {isLoading ? (
           <div className="flex justify-center py-12"><Spinner size="lg" /></div>
         ) : plans && Array.isArray(plans) ? (
-          <Grid cols={3} gap={4} className="grid-cols-1 md:grid-cols-3">
-            {plans.map((plan: any) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {plans.filter((p: any) => p.type !== 'free').map((plan: any) => (
               <PlanCard
-                key={plan.type || plan.name}
+                key={plan.type}
                 plan={plan}
-                isCurrent={subscription?.plan === (plan.type || plan.name)}
+                isCurrent={currentPlan === plan.type}
+                isPopular={plan.type === 'premium'}
+                hasActivePlan={!!subscription && subscription.status === 'active'}
+                userEmail={user?.email || ''}
               />
             ))}
-          </Grid>
+          </div>
         ) : null}
+
+        {/* Free plan note */}
+        <Text variant="body-sm" color="muted" className="text-center">
+          You're currently on the Free plan with {currentPlan === 'free' ? '3 job posts and 10 applications/month' : 'upgraded features'}.
+        </Text>
       </Stack>
     </Container>
   );
 }
 
-function PlanCard({ plan, isCurrent }: { plan: any; isCurrent: boolean }) {
+function PlanCard({ plan, isCurrent, isPopular, hasActivePlan, userEmail }: { plan: any; isCurrent: boolean; isPopular: boolean; hasActivePlan: boolean; userEmail: string }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const orderMutation = useMutation({
-    mutationFn: async () => {
-      const { data } = await subscriptionService.createOrder(plan.type || plan.name);
+  const verifyMutation = useMutation({
+    mutationFn: async (paymentData: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string }) => {
+      const { data } = await subscriptionService.verifyPayment(paymentData);
       return data.data;
     },
-    onSuccess: (data) => {
-      toast({ variant: 'info', title: 'Redirecting to payment...' });
-      // In production, integrate Razorpay checkout here
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
+      toast({ variant: 'success', title: 'Subscription activated!' });
     },
     onError: (error: any) => {
-      toast({ variant: 'error', title: 'Failed', description: error.response?.data?.message });
+      toast({ variant: 'error', title: 'Verification failed', description: error.response?.data?.message });
     },
   });
 
+  const orderMutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await subscriptionService.createOrder(plan.type);
+      return data.data;
+    },
+    onSuccess: (data) => {
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: data.order.amount,
+        currency: data.order.currency || 'INR',
+        name: 'HireFlow',
+        description: `${plan.name} Plan`,
+        order_id: data.order.id,
+        handler: (response: any) => {
+          verifyMutation.mutate({
+            razorpayOrderId: response.razorpay_order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
+          });
+        },
+        prefill: { email: userEmail },
+        theme: { color: '#4f46e5' },
+      };
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', (response: any) => {
+        toast({ variant: 'error', title: 'Payment failed', description: response.error?.description });
+      });
+      rzp.open();
+    },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Failed to create order', description: error.response?.data?.message });
+    },
+  });
+
+  const price = plan.amount / 100; // paise to rupees
   const icon = plan.type === 'enterprise' ? <Building2 /> : plan.type === 'premium' ? <Crown /> : <Zap />;
 
+  const features = getFeatureList(plan.features, plan.type);
+
   return (
-    <Surface variant={isCurrent ? 'elevated' : 'outlined'} padding="lg" className={isCurrent ? 'ring-2 ring-primary-200' : ''}>
-      <Stack gap={4}>
+    <div className={`relative rounded-2xl border p-6 flex flex-col ${isPopular ? 'border-primary-300 bg-primary-50/30 shadow-md' : 'border-border bg-surface-elevated'}`}>
+      {isPopular && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+          <Badge variant="primary" size="lg">Most Popular</Badge>
+        </div>
+      )}
+
+      <Stack gap={4} className="flex-1">
+        {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-primary-50 text-primary-600 [&>svg]:size-[18px]">
+          <div className={`flex size-9 items-center justify-center rounded-lg ${isPopular ? 'bg-primary-100 text-primary-700' : 'bg-neutral-100 text-foreground-secondary'} [&>svg]:size-[18px]`}>
             {icon}
           </div>
-          <Text variant="h5" className="capitalize">{plan.name || plan.type}</Text>
+          <Text variant="h5">{plan.name}</Text>
         </div>
 
+        {/* Price */}
         <div>
-          <Text variant="h3">
-            {plan.price > 0 ? `₹${plan.price}` : 'Free'}
-            {plan.price > 0 && <span className="text-sm font-normal text-foreground-muted">/month</span>}
-          </Text>
+          <div className="flex items-baseline gap-1">
+            <Text variant="h2">₹{price.toLocaleString('en-IN')}</Text>
+            <Text variant="body-sm" color="muted">/month</Text>
+          </div>
+          {plan.gst && plan.gst.rate > 0 && (
+            <Text variant="caption" color="muted">+ 18% GST</Text>
+          )}
         </div>
 
-        {plan.features && (
-          <Stack gap={2}>
-            {(Array.isArray(plan.features) ? plan.features : Object.entries(plan.features)).map((feature: any, i: number) => {
-              const label = typeof feature === 'string' ? feature : `${feature[0]}: ${feature[1]}`;
-              return (
-                <div key={i} className="flex items-center gap-2">
-                  <Check className="size-4 text-success-600 shrink-0" />
-                  <Text variant="body-sm" color="secondary">{label}</Text>
-                </div>
-              );
-            })}
-          </Stack>
-        )}
+        {/* Features */}
+        <Stack gap={2} className="flex-1">
+          {features.map((feature, i) => (
+            <div key={i} className="flex items-start gap-2">
+              {feature.included ? (
+                <Check className="size-4 text-success-600 shrink-0 mt-0.5" />
+              ) : (
+                <X className="size-4 text-neutral-300 shrink-0 mt-0.5" />
+              )}
+              <Text variant="body-sm" color={feature.included ? 'secondary' : 'muted'}>
+                {feature.label}
+              </Text>
+            </div>
+          ))}
+        </Stack>
 
+        {/* CTA */}
         <Button
-          variant={isCurrent ? 'secondary' : 'primary'}
+          variant={isPopular ? 'primary' : 'outline'}
           fullWidth
-          disabled={isCurrent || plan.price === 0}
+          disabled={isCurrent || (hasActivePlan && !isCurrent)}
           onClick={() => orderMutation.mutate()}
-          loading={orderMutation.isPending}
+          loading={orderMutation.isPending || verifyMutation.isPending}
         >
-          {isCurrent ? 'Current Plan' : plan.price === 0 ? 'Free' : 'Upgrade'}
+          {isCurrent ? 'Current Plan' : hasActivePlan ? 'Cancel current plan first' : 'Upgrade'}
         </Button>
       </Stack>
-    </Surface>
+    </div>
   );
+}
+
+function getFeatureList(features: any, planType: string): { label: string; included: boolean }[] {
+  return [
+    { label: features.maxJobPosts ? `${features.maxJobPosts} job posts` : 'Unlimited job posts', included: true },
+    { label: features.maxApplications ? `${features.maxApplications} applications/month` : 'Unlimited applications', included: true },
+    { label: 'Premium job placement', included: !!features.premiumPlacement },
+    { label: 'Access candidate resumes', included: !!features.resumeAccess },
+    { label: 'Advanced analytics', included: !!features.analyticsAccess },
+    { label: 'Direct messaging', included: planType === 'premium' || planType === 'enterprise' },
+    { label: 'Priority support', included: planType === 'enterprise' },
+  ];
 }

@@ -1,1 +1,132 @@
-import { cn } from '@/lib/utils';import {  useState,  useRef,  useEffect,  useCallback,  type ReactNode,  type KeyboardEvent,} from 'react';import { motion, AnimatePresence } from 'framer-motion';/* ─── Dropdown ─── */export type DropdownProps = {  trigger: ReactNode;  children: ReactNode;  align?: 'start' | 'end';  className?: string;};export function Dropdown({ trigger, children, align = 'start', className }: DropdownProps) {  const [open, setOpen] = useState(false);  const containerRef = useRef<HTMLDivElement>(null);  const handleClickOutside = useCallback((e: MouseEvent) => {    if (containerRef.current && !containerRef.current.contains(e.target as Node)) {      setOpen(false);    }  }, []);  const handleKeyDown = useCallback((e: globalThis.KeyboardEvent) => {    if (e.key === 'Escape') setOpen(false);  }, []);  useEffect(() => {    if (open) {      document.addEventListener('mousedown', handleClickOutside);      document.addEventListener('keydown', handleKeyDown);    }    return () => {      document.removeEventListener('mousedown', handleClickOutside);      document.removeEventListener('keydown', handleKeyDown);    };  }, [open, handleClickOutside, handleKeyDown]);  return (    <div ref={containerRef} className={cn('relative inline-flex', className)}>      <div onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="menu">        {trigger}      </div>      <AnimatePresence>        {open && (          <motion.div            initial={{ opacity: 0, y: 4, scale: 0.96 }}            animate={{ opacity: 1, y: 0, scale: 1 }}            exit={{ opacity: 0, y: 4, scale: 0.96 }}            transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}            role="menu"            className={cn(              'absolute top-full mt-1 z-dropdown',              'min-w-[180px] w-max',              'rounded-xl overflow-hidden',              'bg-surface-elevated',              'border border-border',              'shadow-lg',              'py-1',              align === 'end' ? 'right-0' : 'left-0',            )}          >            {children}          </motion.div>        )}      </AnimatePresence>    </div>  );}/* ─── Dropdown Item ─── */export type DropdownItemProps = {  children: ReactNode;  onClick?: () => void;  icon?: ReactNode;  destructive?: boolean;  disabled?: boolean;  className?: string;};export function DropdownItem({  children,  onClick,  icon,  destructive,  disabled,  className,}: DropdownItemProps) {  return (    <button      role="menuitem"      disabled={disabled}      onClick={onClick}      className={cn(        'flex w-full items-center gap-2',        'px-3 py-2',        'text-sm text-left',        'transition-colors duration-fast',        destructive          ? 'text-danger-600 hover:bg-danger-50'          : 'text-foreground hover:bg-neutral-50',        disabled && 'opacity-disabled cursor-not-allowed',        className,      )}    >      {icon && <span className="shrink-0 [&>svg]:size-4 text-current opacity-70">{icon}</span>}      <span>{children}</span>    </button>  );}/* ─── Dropdown Separator ─── */export function DropdownSeparator() {  return <div className="my-1 h-px bg-border" role="separator" />;}/* ─── Dropdown Label ─── */export function DropdownLabel({ children }: { children: ReactNode }) {  return (    <div className="px-3 py-1-5 text-xs font-semibold text-foreground-muted uppercase tracking-wider">      {children}    </div>  );}
+import { cn } from '@/lib/utils';
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+/* ─── Dropdown ─── */
+export type DropdownProps = {
+  trigger: ReactNode;
+  children: ReactNode;
+  align?: 'start' | 'end';
+  direction?: 'down' | 'up';
+  className?: string;
+};
+
+export function Dropdown({ trigger, children, align = 'start', direction = 'down', className }: DropdownProps) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleClickOutside = useCallback((e: MouseEvent) => {
+    if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      setOpen(false);
+    }
+  }, []);
+
+  const handleKeyDown = useCallback((e: globalThis.KeyboardEvent) => {
+    if (e.key === 'Escape') setOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, handleClickOutside, handleKeyDown]);
+
+  return (
+    <div ref={containerRef} className={cn('relative inline-flex', className)}>
+      <div onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="menu">
+        {trigger}
+      </div>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.96 }}
+            transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+            role="menu"
+            className={cn(
+              'absolute z-50',
+              'min-w-[180px] w-max',
+              'rounded-xl overflow-hidden',
+              'bg-surface-elevated',
+              'border border-border',
+              'shadow-lg',
+              'py-1',
+              direction === 'up' ? 'bottom-full mb-1' : 'top-full mt-1',
+              align === 'end' ? 'right-0' : 'left-0',
+            )}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ─── Dropdown Item ─── */
+export type DropdownItemProps = {
+  children: ReactNode;
+  onClick?: () => void;
+  icon?: ReactNode;
+  destructive?: boolean;
+  disabled?: boolean;
+  className?: string;
+};
+
+export function DropdownItem({
+  children,
+  onClick,
+  icon,
+  destructive,
+  disabled,
+  className,
+}: DropdownItemProps) {
+  return (
+    <button
+      role="menuitem"
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        'flex w-full items-center gap-2',
+        'px-3 py-2',
+        'text-sm text-left',
+        'transition-colors duration-fast',
+        destructive
+          ? 'text-danger-600 hover:bg-danger-50'
+          : 'text-foreground hover:bg-neutral-50',
+        disabled && 'opacity-disabled cursor-not-allowed',
+        className,
+      )}
+    >
+      {icon && <span className="shrink-0 [&>svg]:size-4 text-current opacity-70">{icon}</span>}
+      <span>{children}</span>
+    </button>
+  );
+}
+
+/* ─── Dropdown Separator ─── */
+export function DropdownSeparator() {
+  return <div className="my-1 h-px bg-border" role="separator" />;
+}
+
+/* ─── Dropdown Label ─── */
+export function DropdownLabel({ children }: { children: ReactNode }) {
+  return (
+    <div className="px-3 py-1.5 text-xs font-semibold text-foreground-muted uppercase tracking-wider">
+      {children}
+    </div>
+  );
+}

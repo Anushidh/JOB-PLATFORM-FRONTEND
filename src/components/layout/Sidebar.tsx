@@ -87,7 +87,7 @@ function getNavItems(role: UserRole): NavItemProps[] {
     case UserRole.ADMIN:
       return [
         { to: '/admin', icon: <LayoutDashboard />, label: 'Dashboard' },
-        { to: '/admin/employees', icon: <Users />, label: 'Employees' },
+        { to: '/admin/employees', icon: <Users />, label: 'Job Seekers' },
         { to: '/admin/employers', icon: <Building2 />, label: 'Employers' },
         { to: '/admin/jobs', icon: <Briefcase />, label: 'Job Moderation' },
         { to: '/admin/revenue', icon: <BarChart3 />, label: 'Revenue' },
@@ -112,7 +112,7 @@ export function Sidebar() {
     setShowLogoutConfirm(false);
   };
 
-  const displayName = `${user.firstName} ${user.lastName}`;
+  const displayName = user.firstName ? `${user.firstName} ${user.lastName}` : (user as any).email?.split('@')[0] || 'Admin';
   const roleLabel = role === UserRole.ADMIN ? 'Admin' : role === UserRole.EMPLOYER ? 'Employer' : 'Job Seeker';
 
   return (
