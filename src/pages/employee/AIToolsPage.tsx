@@ -1,10 +1,23 @@
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Container, Stack, Text, Button, Input, Surface, Textarea, Spinner, useToast,
+  Container, Stack, Text, Button, Select, Surface, Textarea, useToast,
 } from '@/components/ui';
 import { api } from '@/lib/api';
-import { Sparkles, FileText, Target, Upload } from 'lucide-react';
+import { Sparkles, FileText, Target, Upload, ArrowRight } from 'lucide-react';
+import { useCoverLetterDraftStore } from '@/stores/coverLetterDraft.store';
+
+// Shared hook to fetch available jobs for the employee
+function useAvailableJobs() {
+  return useQuery({
+    queryKey: ['available-jobs-for-ai'],
+    queryFn: async () => {
+      const { data } = await api.get('/jobs', { params: { limit: 50 } });
+      return data.data;
+    },
+  });
+}
 
 export function EmployeeAIToolsPage() {
   return (
@@ -29,6 +42,7 @@ export function EmployeeAIToolsPage() {
 
 function ResumeParserCard() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
 
   const parseMutation = useMutation({
@@ -38,18 +52,38 @@ function ResumeParserCard() {
       const { data } = await api.post('/ai/parse-resume', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      return data.data;
-    },
-    onSuccess: () => {
-      toast({ variant: 'success', title: 'Resume parsed!', description: 'Review the extracted data on your profile.' });
+      return data.data.parsed;
     },
     onError: (error: any) => {
       toast({ variant: 'error', title: 'Parse failed', description: error.response?.data?.message });
     },
   });
 
+  const saveMutation = useMutation({
+    mutationFn: async (parsed: any) => {
+      const { data } = await api.post('/ai/apply-parsed-resume', {
+        skills: parsed.skills,
+        experience: parsed.experience,
+        education: parsed.education,
+        bio: parsed.bio,
+        headline: parsed.headline,
+      });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user', 'profile'] });
+      queryClient.invalidateQueries({ queryKey: ['user', 'profile-completion'] });
+      toast({ variant: 'success', title: 'Profile updated!', description: 'Your resume data has been saved to your profile.' });
+    },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Save failed', description: error.response?.data?.message });
+    },
+  });
+
+  const parsed = parseMutation.data;
+
   return (
-    <Surface variant="elevated" padding="lg">
+    <Surface variant="elevated" padding="lg" className="md:col-span-2">
       <Stack gap={4}>
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-lg bg-primary-50">
@@ -65,14 +99,14 @@ function ResumeParserCard() {
           <input
             type="file"
             accept=".pdf"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            onChange={(e) => { setFile(e.target.files?.[0] || null); parseMutation.reset(); saveMutation.reset(); }}
             className="text-sm text-foreground-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-primary-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-700 hover:file:bg-primary-100"
           />
         </div>
 
         <Button
           onClick={() => file && parseMutation.mutate(file)}
-          disabled={!file}
+          disabled={!file || parseMutation.isPending}
           loading={parseMutation.isPending}
           leftIcon={<Sparkles />}
           size="sm"
@@ -80,9 +114,68 @@ function ResumeParserCard() {
           Parse Resume
         </Button>
 
-        {parseMutation.data && (
-          <div className="rounded-lg bg-success-50 border border-success-100 p-3">
-            <Text variant="body-sm" color="success">Resume parsed successfully. Check your profile to review.</Text>
+        {parsed && (
+          <div className="rounded-lg border border-border bg-neutral-25 p-4 space-y-4">
+            {parsed.headline && (
+              <div>
+                <Text variant="label" className="mb-1">Headline</Text>
+                <Text variant="body-sm">{parsed.headline}</Text>
+              </div>
+            )}
+
+            {parsed.bio && (
+              <div>
+                <Text variant="label" className="mb-1">Bio</Text>
+                <Text variant="body-sm">{parsed.bio}</Text>
+              </div>
+            )}
+
+            {parsed.skills?.length > 0 && (
+              <div>
+                <Text variant="label" className="mb-1">Skills ({parsed.skills.length})</Text>
+                <div className="flex flex-wrap gap-1">
+                  {parsed.skills.map((skill: string) => (
+                    <span key={skill} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-primary-50 text-primary-700 border border-primary-200">{skill}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {parsed.experience?.length > 0 && (
+              <div>
+                <Text variant="label" className="mb-1">Experience ({parsed.experience.length})</Text>
+                <div className="space-y-2">
+                  {parsed.experience.map((exp: any, i: number) => (
+                    <div key={i} className="text-sm">
+                      <span className="font-medium">{exp.title}</span> at <span className="text-foreground-secondary">{exp.company}</span>
+                      {exp.startDate && <span className="text-foreground-muted ml-1">({exp.startDate} – {exp.current ? 'Present' : exp.endDate || ''})</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {parsed.education?.length > 0 && (
+              <div>
+                <Text variant="label" className="mb-1">Education ({parsed.education.length})</Text>
+                <div className="space-y-2">
+                  {parsed.education.map((edu: any, i: number) => (
+                    <div key={i} className="text-sm">
+                      <span className="font-medium">{edu.degree} in {edu.fieldOfStudy}</span> from <span className="text-foreground-secondary">{edu.institution}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Button
+              onClick={() => saveMutation.mutate(parsed)}
+              loading={saveMutation.isPending}
+              disabled={saveMutation.isSuccess}
+              size="sm"
+            >
+              {saveMutation.isSuccess ? '✓ Saved to Profile' : 'Save to Profile'}
+            </Button>
           </div>
         )}
       </Stack>
@@ -92,12 +185,20 @@ function ResumeParserCard() {
 
 function CoverLetterCard() {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const setDraft = useCoverLetterDraftStore((s) => s.setDraft);
   const [jobId, setJobId] = useState('');
+  const resultRef = useRef<HTMLDivElement>(null);
+  const jobsQuery = useAvailableJobs();
+  const jobs = jobsQuery.data || [];
 
   const generateMutation = useMutation({
     mutationFn: async (jobId: string) => {
       const { data } = await api.post('/ai/generate-cover-letter', { jobId });
       return data.data;
+    },
+    onSuccess: () => {
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
     },
     onError: (error: any) => {
       toast({ variant: 'error', title: 'Generation failed', description: error.response?.data?.message });
@@ -105,7 +206,7 @@ function CoverLetterCard() {
   });
 
   return (
-    <Surface variant="elevated" padding="lg">
+    <Surface variant="elevated" padding="lg" className="md:col-span-2">
       <Stack gap={4}>
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-lg bg-primary-50">
@@ -117,11 +218,14 @@ function CoverLetterCard() {
           </div>
         </div>
 
-        <Input
-          placeholder="Paste Job ID"
+        <Select
           value={jobId}
-          onChange={(e) => setJobId(e.target.value)}
-          inputSize="sm"
+          onChange={(e) => { setJobId(e.target.value); generateMutation.reset(); }}
+          selectSize="sm"
+          options={[
+            { value: '', label: jobsQuery.isLoading ? 'Loading jobs...' : 'Select a job', disabled: true },
+            ...jobs.map((job: any) => ({ value: job._id, label: `${job.title} — ${(job.company as any)?.name || 'Unknown'}` })),
+          ]}
         />
 
         <Button
@@ -135,12 +239,25 @@ function CoverLetterCard() {
         </Button>
 
         {generateMutation.data?.coverLetter && (
-          <Textarea
-            value={generateMutation.data.coverLetter}
-            rows={6}
-            readOnly
-            className="bg-neutral-25"
-          />
+          <div ref={resultRef}>
+            <Textarea
+              value={generateMutation.data.coverLetter}
+              rows={6}
+              readOnly
+              className="bg-neutral-25"
+            />
+            <Button
+              variant="secondary"
+              leftIcon={<ArrowRight />}
+              className="mt-3"
+              onClick={() => {
+                setDraft({ jobId, coverLetter: generateMutation.data.coverLetter });
+                navigate(`/employee/jobs/${jobId}`);
+              }}
+            >
+              Apply with this Cover Letter
+            </Button>
+          </div>
         )}
       </Stack>
     </Surface>
@@ -150,11 +267,17 @@ function CoverLetterCard() {
 function MatchScoreCard() {
   const { toast } = useToast();
   const [jobId, setJobId] = useState('');
+  const resultRef = useRef<HTMLDivElement>(null);
+  const jobsQuery = useAvailableJobs();
+  const jobs = jobsQuery.data || [];
 
   const matchMutation = useMutation({
     mutationFn: async (jobId: string) => {
       const { data } = await api.get(`/ai/match-score/${jobId}`);
       return data.data;
+    },
+    onSuccess: () => {
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
     },
     onError: (error: any) => {
       toast({ variant: 'error', title: 'Failed', description: error.response?.data?.message });
@@ -162,7 +285,7 @@ function MatchScoreCard() {
   });
 
   return (
-    <Surface variant="elevated" padding="lg">
+    <Surface variant="elevated" padding="lg" className="md:col-span-2">
       <Stack gap={4}>
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-lg bg-primary-50">
@@ -174,11 +297,14 @@ function MatchScoreCard() {
           </div>
         </div>
 
-        <Input
-          placeholder="Paste Job ID"
+        <Select
           value={jobId}
-          onChange={(e) => setJobId(e.target.value)}
-          inputSize="sm"
+          onChange={(e) => { setJobId(e.target.value); matchMutation.reset(); }}
+          selectSize="sm"
+          options={[
+            { value: '', label: jobsQuery.isLoading ? 'Loading jobs...' : 'Select a job', disabled: true },
+            ...jobs.map((job: any) => ({ value: job._id, label: `${job.title} — ${(job.company as any)?.name || 'Unknown'}` })),
+          ]}
         />
 
         <Button
@@ -192,11 +318,53 @@ function MatchScoreCard() {
         </Button>
 
         {matchMutation.data && (
-          <div className="rounded-lg bg-neutral-50 border border-border p-4 text-center">
-            <Text variant="h2" color="primary">{matchMutation.data.overallScore ?? matchMutation.data.score}%</Text>
-            <Text variant="body-sm" color="secondary" className="mt-1">Match Score</Text>
+          <div ref={resultRef} className="rounded-lg bg-neutral-50 border border-border p-4">
+            <div className="text-center mb-3">
+              <Text variant="h2" color="primary">{matchMutation.data.overall}%</Text>
+              <Text variant="body-sm" color="secondary" className="mt-1">{matchMutation.data.summary}</Text>
+            </div>
             {matchMutation.data.explanation && (
-              <Text variant="caption" color="muted" className="mt-2">{matchMutation.data.explanation}</Text>
+              <Text variant="body-sm" color="muted" className="text-center">{matchMutation.data.explanation}</Text>
+            )}
+            {matchMutation.data.breakdown && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+                <div className="text-center p-2 rounded bg-white border border-border">
+                  <Text variant="body-sm" color="secondary">Skills</Text>
+                  <Text variant="subtitle">{matchMutation.data.breakdown.skills}%</Text>
+                </div>
+                <div className="text-center p-2 rounded bg-white border border-border">
+                  <Text variant="body-sm" color="secondary">Experience</Text>
+                  <Text variant="subtitle">{matchMutation.data.breakdown.experience}%</Text>
+                </div>
+                <div className="text-center p-2 rounded bg-white border border-border">
+                  <Text variant="body-sm" color="secondary">Location</Text>
+                  <Text variant="subtitle">{matchMutation.data.breakdown.location}%</Text>
+                </div>
+                <div className="text-center p-2 rounded bg-white border border-border">
+                  <Text variant="body-sm" color="secondary">Salary</Text>
+                  <Text variant="subtitle">{matchMutation.data.breakdown.salary}%</Text>
+                </div>
+              </div>
+            )}
+            {matchMutation.data.matchedSkills?.length > 0 && (
+              <div className="mt-3">
+                <Text variant="body-sm" color="secondary">Matched Skills:</Text>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {matchMutation.data.matchedSkills.map((skill: string) => (
+                    <span key={skill} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 border border-green-200">{skill}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {matchMutation.data.missingSkills?.length > 0 && (
+              <div className="mt-2">
+                <Text variant="body-sm" color="secondary">Missing Skills:</Text>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {matchMutation.data.missingSkills.map((skill: string) => (
+                    <span key={skill} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-50 text-red-700 border border-red-200">{skill}</span>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         )}

@@ -70,6 +70,7 @@ function getNavItems(role: UserRole): NavItemProps[] {
         { to: '/employee/messages', icon: <MessageSquare />, label: 'Messages' },
         { to: '/employee/notifications', icon: <Bell />, label: 'Notifications' },
         { to: '/employee/ai', icon: <Sparkles />, label: 'AI Tools' },
+        { to: '/employee/subscription', icon: <CreditCard />, label: 'Subscription' },
         { to: '/employee/profile', icon: <Settings />, label: 'Profile' },
       ];
     case UserRole.EMPLOYER:

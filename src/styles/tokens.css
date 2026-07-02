@@ -145,7 +145,7 @@
   --z-overlay: 200;
   --z-modal: 300;
   --z-popover: 400;
-  --z-toast: 500;
+  --z-toast: 9999;
 
   /* ─── Transitions ─── */
   --duration-fast: 100ms;

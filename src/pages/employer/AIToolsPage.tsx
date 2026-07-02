@@ -1,10 +1,12 @@
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Container, Stack, Text, Button, Input, Select, Surface, Textarea, useToast,
 } from '@/components/ui';
 import { api } from '@/lib/api';
-import { Sparkles, FileText, Target } from 'lucide-react';
+import { Sparkles, FileText, Target, ArrowRight } from 'lucide-react';
+import { useJobDraftStore } from '@/stores/jobDraft.store';
 
 export function EmployerAIToolsPage() {
   return (
@@ -28,6 +30,8 @@ export function EmployerAIToolsPage() {
 
 function JobDescriptionGenerator() {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const setDraft = useJobDraftStore((s) => s.setDraft);
   const [title, setTitle] = useState('');
   const [skills, setSkills] = useState('');
   const [experienceLevel, setExperienceLevel] = useState('mid');
@@ -104,6 +108,27 @@ function JobDescriptionGenerator() {
             className="bg-neutral-25 font-mono text-sm"
           />
         )}
+
+        {generateMutation.data?.description && (
+          <Button
+            variant="secondary"
+            leftIcon={<ArrowRight />}
+            onClick={() => {
+              setDraft({
+                title,
+                description: generateMutation.data.description,
+                skillsRequired: skills,
+                experienceLevel,
+                jobType,
+                workMode,
+                location,
+              });
+              navigate('/employer/jobs/new');
+            }}
+          >
+            Create Job with This Description
+          </Button>
+        )}
       </Stack>
     </Surface>
   );
@@ -113,16 +138,42 @@ function ApplicantMatchCard() {
   const { toast } = useToast();
   const [jobId, setJobId] = useState('');
   const [applicantId, setApplicantId] = useState('');
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  // Fetch employer's jobs
+  const jobsQuery = useQuery({
+    queryKey: ['employer-jobs-for-match'],
+    queryFn: async () => {
+      const { data } = await api.get('/jobs/employer/my-jobs', { params: { limit: 100 } });
+      return data.data;
+    },
+  });
+
+  // Fetch applicants for selected job
+  const applicantsQuery = useQuery({
+    queryKey: ['job-applicants', jobId],
+    queryFn: async () => {
+      const { data } = await api.get(`/applications/jobs/${jobId}/applications`, { params: { limit: 100 } });
+      return data.data;
+    },
+    enabled: !!jobId,
+  });
 
   const matchMutation = useMutation({
     mutationFn: async () => {
       const { data } = await api.get(`/ai/applicant-match/${jobId}/${applicantId}`);
       return data.data;
     },
+    onSuccess: () => {
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    },
     onError: (error: any) => {
       toast({ variant: 'error', title: 'Failed', description: error.response?.data?.message });
     },
   });
+
+  const jobs = jobsQuery.data || [];
+  const applicants = applicantsQuery.data || [];
 
   return (
     <Surface variant="elevated" padding="lg" className="md:col-span-2">
@@ -138,8 +189,32 @@ function ApplicantMatchCard() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Input label="Job ID" placeholder="Paste job ID" value={jobId} onChange={(e) => setJobId(e.target.value)} inputSize="sm" />
-          <Input label="Applicant ID" placeholder="Paste applicant ID" value={applicantId} onChange={(e) => setApplicantId(e.target.value)} inputSize="sm" />
+          <Select
+            label="Select Job"
+            value={jobId}
+            onChange={(e) => { setJobId(e.target.value); setApplicantId(''); matchMutation.reset(); }}
+            selectSize="sm"
+            options={[
+              { value: '', label: jobsQuery.isLoading ? 'Loading jobs...' : 'Select a job', disabled: true },
+              ...jobs.map((job: any) => ({ value: job._id, label: job.title })),
+            ]}
+          />
+          <Select
+            label="Select Applicant"
+            value={applicantId}
+            onChange={(e) => { setApplicantId(e.target.value); matchMutation.reset(); }}
+            selectSize="sm"
+            disabled={!jobId || applicantsQuery.isLoading}
+            options={[
+              { value: '', label: !jobId ? 'Select a job first' : applicantsQuery.isLoading ? 'Loading applicants...' : applicants.length === 0 ? 'No applicants yet' : 'Select an applicant', disabled: true },
+              ...applicants.map((app: any) => {
+                const name = typeof app.applicant === 'object'
+                  ? `${app.applicant.firstName} ${app.applicant.lastName}`
+                  : 'Unknown';
+                return { value: typeof app.applicant === 'object' ? app.applicant._id : app.applicant, label: name };
+              }),
+            ]}
+          />
         </div>
 
         <Button
@@ -153,9 +228,51 @@ function ApplicantMatchCard() {
         </Button>
 
         {matchMutation.data && (
-          <div className="rounded-lg bg-neutral-50 border border-border p-4 text-center">
-            <Text variant="h2" color="primary">{matchMutation.data.overallScore ?? matchMutation.data.score}%</Text>
-            <Text variant="body-sm" color="secondary" className="mt-1">Match Score</Text>
+          <div ref={resultRef} className="rounded-lg bg-neutral-50 border border-border p-4">
+            <div className="text-center mb-3">
+              <Text variant="h2" color="primary">{matchMutation.data.overall}%</Text>
+              <Text variant="body-sm" color="secondary" className="mt-1">{matchMutation.data.summary}</Text>
+            </div>
+            {matchMutation.data.breakdown && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+                <div className="text-center p-2 rounded bg-white border border-border">
+                  <Text variant="body-sm" color="secondary">Skills</Text>
+                  <Text variant="subtitle">{matchMutation.data.breakdown.skills}%</Text>
+                </div>
+                <div className="text-center p-2 rounded bg-white border border-border">
+                  <Text variant="body-sm" color="secondary">Experience</Text>
+                  <Text variant="subtitle">{matchMutation.data.breakdown.experience}%</Text>
+                </div>
+                <div className="text-center p-2 rounded bg-white border border-border">
+                  <Text variant="body-sm" color="secondary">Location</Text>
+                  <Text variant="subtitle">{matchMutation.data.breakdown.location}%</Text>
+                </div>
+                <div className="text-center p-2 rounded bg-white border border-border">
+                  <Text variant="body-sm" color="secondary">Salary</Text>
+                  <Text variant="subtitle">{matchMutation.data.breakdown.salary}%</Text>
+                </div>
+              </div>
+            )}
+            {matchMutation.data.matchedSkills?.length > 0 && (
+              <div className="mt-3">
+                <Text variant="body-sm" color="secondary">Matched Skills:</Text>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {matchMutation.data.matchedSkills.map((skill: string) => (
+                    <span key={skill} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 border border-green-200">{skill}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {matchMutation.data.missingSkills?.length > 0 && (
+              <div className="mt-2">
+                <Text variant="body-sm" color="secondary">Missing Skills:</Text>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {matchMutation.data.missingSkills.map((skill: string) => (
+                    <span key={skill} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-50 text-red-700 border border-red-200">{skill}</span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Stack>

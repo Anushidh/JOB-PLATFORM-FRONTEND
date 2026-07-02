@@ -8,6 +8,7 @@ import { Shield, CheckCircle, XCircle, Building2, MapPin, ChevronLeft, ChevronRi
 
 export function JobModerationPage() {
   const [page, setPage] = useState(1);
+  const [actionJobId, setActionJobId] = useState<string | null>(null);
 
   const { data, isLoading } = usePendingJobs({ page, limit: 10 });
   const approveMutation = useApproveJob();
@@ -50,8 +51,8 @@ export function JobModerationPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <Button variant="outline" size="sm" onClick={() => approveMutation.mutate(job._id)} loading={approveMutation.isPending} leftIcon={<CheckCircle />}>Approve</Button>
-                      <Button variant="ghost" size="sm" onClick={() => rejectMutation.mutate({ jobId: job._id })} loading={rejectMutation.isPending} className="text-danger-600" leftIcon={<XCircle />}>Reject</Button>
+                      <Button variant="outline" size="sm" onClick={() => { setActionJobId(job._id); approveMutation.mutate(job._id); }} loading={approveMutation.isPending && actionJobId === job._id} leftIcon={<CheckCircle />}>Approve</Button>
+                      <Button variant="ghost" size="sm" onClick={() => { setActionJobId(job._id); rejectMutation.mutate({ jobId: job._id }); }} loading={rejectMutation.isPending && actionJobId === job._id} className="text-danger-600" leftIcon={<XCircle />}>Reject</Button>
                     </div>
                   </div>
                 </Surface>

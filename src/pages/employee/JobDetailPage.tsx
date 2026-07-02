@@ -8,12 +8,15 @@ import { jobsService } from '@/services/jobs.service';
 import { useCheckSaved, useSaveJob, useUnsaveJob } from '@/hooks/useSavedJobs';
 import { useApplyToJob, useMyApplications } from '@/hooks/useApplications';
 import { NewMessageModal } from '@/components/NewMessageModal';
+import { useCoverLetterDraftStore } from '@/stores/coverLetterDraft.store';
+import { api } from '@/lib/api';
 import type { Job, Company } from '@/types';
 import {
   ArrowLeft, MapPin, Briefcase, Clock, Building2, Globe, Users, Calendar,
-  Bookmark, BookmarkCheck, ExternalLink, Share2, Send, MessageSquare,
+  Bookmark, BookmarkCheck, ExternalLink, Share2, Send, MessageSquare, Sparkles, FileText,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
 
 export function JobDetailPage() {
   const { jobId } = useParams<{ jobId: string }>();
@@ -25,6 +28,35 @@ export function JobDetailPage() {
 
   const { data: jobData, isLoading } = useJob(jobId);
   const applyMutation = useApplyToJob(jobId!);
+
+  // Consume cover letter draft from AI Tools page
+  const draft = useCoverLetterDraftStore((s) => s.draft);
+  const clearDraft = useCoverLetterDraftStore((s) => s.clearDraft);
+  const [hasDraft, setHasDraft] = useState(false);
+
+  useEffect(() => {
+    if (draft && draft.jobId === jobId) {
+      setCoverLetter(draft.coverLetter);
+      setHasDraft(true);
+      clearDraft();
+    }
+  }, [draft, jobId, clearDraft]);
+
+  // Generate cover letter with AI inside the modal
+  const generateCoverLetterMutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post('/ai/generate-cover-letter', { jobId });
+      return data.data;
+    },
+    onSuccess: (data) => {
+      if (data?.coverLetter) {
+        setCoverLetter(data.coverLetter);
+      }
+    },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Generation failed', description: error.response?.data?.message });
+    },
+  });
 
   // Check if already applied
   const { data: myApplications, isLoading: applicationsLoading } = useMyApplications({ page: 1, limit: 100 });
@@ -113,6 +145,18 @@ export function JobDetailPage() {
         <ArrowLeft className="size-4" /> Back to jobs
       </Link>
 
+      {hasDraft && !hasApplied && (
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-primary-200 bg-primary-50 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-4 text-primary-600" />
+            <Text variant="body-sm" className="text-primary-800">Your AI-generated cover letter is ready to go</Text>
+          </div>
+          <Button size="sm" onClick={() => { setShowApplyModal(true); setHasDraft(false); }} leftIcon={<Send className="size-3" />}>
+            Apply with Cover Letter
+          </Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
         {/* Main */}
         <Stack gap={6}>
@@ -150,8 +194,11 @@ export function JobDetailPage() {
               )}
 
               <div className="flex gap-3">
-                <Button size="lg" className="flex-1 sm:flex-none" onClick={() => setShowApplyModal(true)} disabled={hasApplied || applicationsLoading} loading={applicationsLoading}>
-                  {isWithdrawn ? 'Withdrawn' : hasApplied ? '✓ Applied' : 'Apply Now'}
+                <Button size="lg" className="flex-1 sm:flex-none" onClick={() => applyMutation.mutate({})} disabled={hasApplied || applicationsLoading} loading={applyMutation.isPending || applicationsLoading}>
+                  {isWithdrawn ? 'Withdrawn' : hasApplied ? '✓ Applied' : '⚡ Quick Apply'}
+                </Button>
+                <Button size="lg" variant="outline" className="flex-1 sm:flex-none" onClick={() => setShowApplyModal(true)} disabled={hasApplied || applicationsLoading} leftIcon={<FileText className="size-4" />}>
+                  Apply with Cover Letter
                 </Button>
                 <Button
                   variant="outline"
@@ -294,14 +341,27 @@ export function JobDetailPage() {
             <Text variant="body-sm" color="secondary">
               Your profile and resume will be shared with <span className="font-medium text-foreground">{(job.company as Company)?.name}</span>.
             </Text>
-            <Textarea
-              label="Cover Letter (optional)"
-              placeholder="Tell the employer why you're a great fit for this role..."
-              rows={5}
-              value={coverLetter}
-              onChange={(e) => setCoverLetter(e.target.value)}
-              hint="A personalized cover letter increases your chances"
-            />
+            <div>
+              <Textarea
+                label="Cover Letter (optional)"
+                placeholder="Tell the employer why you're a great fit for this role..."
+                rows={5}
+                value={coverLetter}
+                onChange={(e) => setCoverLetter(e.target.value)}
+                hint="A personalized cover letter increases your chances"
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                leftIcon={<Sparkles />}
+                className="mt-2"
+                onClick={() => generateCoverLetterMutation.mutate()}
+                loading={generateCoverLetterMutation.isPending}
+                disabled={generateCoverLetterMutation.isPending}
+              >
+                Generate with AI
+              </Button>
+            </div>
           </Stack>
         </ModalBody>
         <ModalFooter>

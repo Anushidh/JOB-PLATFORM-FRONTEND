@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router';
 import { lazy, Suspense } from 'react';
 import { UserRole } from '@/types';
 import { Spinner } from '@/components/ui';
+import { NotFoundPage } from '@/pages/NotFoundPage';
 
 // Layouts
 import { AppShell } from '@/components/layout/AppShell';
@@ -33,6 +34,7 @@ const JobAlertsPage = lazy(() => import('@/pages/employee/JobAlertsPage').then(m
 const EmployeeAIToolsPage = lazy(() => import('@/pages/employee/AIToolsPage').then(m => ({ default: m.EmployeeAIToolsPage })));
 const ProfilePage = lazy(() => import('@/pages/employee/ProfilePage').then(m => ({ default: m.ProfilePage })));
 const ProfileViewsPage = lazy(() => import('@/pages/employee/ProfileViewsPage').then(m => ({ default: m.ProfileViewsPage })));
+const EmployeeSubscriptionPage = lazy(() => import('@/pages/employee/SubscriptionPage').then(m => ({ default: m.EmployeeSubscriptionPage })));
 
 // Lazy-loaded pages — Employer
 const EmployerDashboardPage = lazy(() => import('@/pages/employer/DashboardPage').then(m => ({ default: m.EmployerDashboardPage })));
@@ -100,6 +102,7 @@ export function AppRoutes() {
             <Route path="/employee/messages" element={<MessagesPage />} />
             <Route path="/employee/notifications" element={<NotificationsPage />} />
             <Route path="/employee/ai" element={<EmployeeAIToolsPage />} />
+            <Route path="/employee/subscription" element={<EmployeeSubscriptionPage />} />
             <Route path="/employee/profile" element={<ProfilePage />} />
             <Route path="/employee/profile-views" element={<ProfileViewsPage />} />
           </Route>
@@ -143,17 +146,5 @@ export function AppRoutes() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
-  );
-}
-
-function NotFoundPage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="text-center">
-        <p className="text-display font-bold text-neutral-200">404</p>
-        <p className="text-lg font-medium text-foreground mt-2">Page not found</p>
-        <p className="text-sm text-foreground-muted mt-1">The page you're looking for doesn't exist.</p>
-      </div>
-    </div>
   );
 }

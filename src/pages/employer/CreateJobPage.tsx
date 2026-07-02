@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,6 +10,7 @@ import { useCreateJob } from '@/hooks/useJobs';
 import type { CreateJobRequest } from '@/services/jobs.service';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import { Link } from 'react-router';
+import { useJobDraftStore } from '@/stores/jobDraft.store';
 
 const createJobSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(200),
@@ -63,10 +64,30 @@ export function CreateJobPage() {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(createJobSchema),
   });
+
+  // Pre-fill from AI-generated draft if available
+  const draft = useJobDraftStore((s) => s.draft);
+  const clearDraft = useJobDraftStore((s) => s.clearDraft);
+
+  useEffect(() => {
+    if (draft) {
+      reset({
+        title: draft.title,
+        description: draft.description,
+        skillsRequired: draft.skillsRequired,
+        experienceLevel: draft.experienceLevel,
+        jobType: draft.jobType,
+        workMode: draft.workMode,
+        location: draft.location,
+      });
+      clearDraft();
+    }
+  }, [draft, reset, clearDraft]);
 
   const onSubmit = (data: FormData) => {
     const payload: CreateJobRequest = {
