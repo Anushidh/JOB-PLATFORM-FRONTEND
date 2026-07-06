@@ -78,8 +78,8 @@ export function RevenuePage() {
           ) : !payments?.data || payments.data.length === 0 ? (
             <Text variant="body-sm" color="muted" className="text-center py-8">No payments recorded yet.</Text>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
+            <div className="overflow-x-auto pb-2">
+              <table className="w-full text-left whitespace-nowrap min-w-[600px]">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="pb-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider">User</th>
