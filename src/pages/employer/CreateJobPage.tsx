@@ -8,9 +8,10 @@ import {
 } from '@/components/ui';
 import { useCreateJob } from '@/hooks/useJobs';
 import type { CreateJobRequest } from '@/services/jobs.service';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import { ArrowLeft, Sparkles, Building2 } from 'lucide-react';
 import { Link } from 'react-router';
 import { useJobDraftStore } from '@/stores/jobDraft.store';
+import { useAuthStore } from '@/stores/auth.store';
 
 const createJobSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(200),
@@ -58,6 +59,7 @@ type FormData = z.infer<typeof createJobSchema>;
 export function CreateJobPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuthStore();
 
   const createMutation = useCreateJob();
 
@@ -88,6 +90,27 @@ export function CreateJobPage() {
       clearDraft();
     }
   }, [draft, reset, clearDraft]);
+
+  if (user && !('company' in user && user.company)) {
+    return (
+      <Container size="md" className="py-12">
+        <Surface variant="elevated" padding="xl" className="text-center flex flex-col items-center">
+          <div className="flex justify-center mb-5">
+            <div className="size-16 rounded-full bg-primary-50 flex items-center justify-center text-primary-600">
+              <Building2 className="size-8" />
+            </div>
+          </div>
+          <Text variant="h3" className="mb-2">Company Profile Required</Text>
+          <Text variant="body" color="secondary" className="mb-8 max-w-md mx-auto">
+            You need to create a company profile before you can start posting jobs. This helps job seekers know who they're applying to and builds trust.
+          </Text>
+          <Button onClick={() => navigate('/employer/company')} size="lg">
+            Set Up Company Profile
+          </Button>
+        </Surface>
+      </Container>
+    );
+  }
 
   const onSubmit = (data: FormData) => {
     const payload: CreateJobRequest = {

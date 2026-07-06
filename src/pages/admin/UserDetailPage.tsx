@@ -55,10 +55,10 @@ export function UserDetailPage() {
       <Stack gap={6}>
         {/* Header */}
         <Surface variant="elevated" padding="lg">
-          <div className="flex items-center gap-5">
-            <Avatar size="2xl" src={user.avatar} fallback={fullName} />
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
+          <div className="flex items-start sm:items-center gap-5">
+            <Avatar size="2xl" src={user.avatar} fallback={fullName} className="shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <Text variant="h3">{fullName}</Text>
                 {user.isSuspended ? (
                   <Badge variant="danger" size="lg">Suspended</Badge>
@@ -75,8 +75,8 @@ export function UserDetailPage() {
               {!isEmployee && user.position && (
                 <Text variant="body" color="secondary" className="mt-1">{user.position}{user.department ? ` · ${user.department}` : ''}</Text>
               )}
-              <div className="flex items-center gap-4 mt-2 text-sm text-foreground-muted">
-                <span className="flex items-center gap-1"><Mail className="size-3.5" /> {user.email}</span>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-foreground-muted">
+                <span className="flex items-center gap-1 break-all"><Mail className="size-3.5 shrink-0" /> {user.email}</span>
                 {user.phone && <span className="flex items-center gap-1"><Phone className="size-3.5" /> {user.phone}</span>}
                 {user.location && <span className="flex items-center gap-1"><MapPin className="size-3.5" /> {user.location}</span>}
               </div>

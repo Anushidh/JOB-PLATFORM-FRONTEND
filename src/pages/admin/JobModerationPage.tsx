@@ -32,27 +32,29 @@ export function JobModerationPage() {
               const company = job.company as Company;
               return (
                 <Surface key={job._id} variant="elevated" padding="md">
-                  <div className="flex items-start gap-4">
-                    {company?.logoUrl ? (
-                      <img src={company.logoUrl} alt="" className="size-11 rounded-lg object-cover border border-border shrink-0" />
-                    ) : (
-                      <div className="flex size-11 items-center justify-center rounded-lg bg-neutral-100 shrink-0"><Building2 className="size-5 text-foreground-muted" /></div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <Text variant="subtitle">{job.title}</Text>
-                      <div className="flex items-center gap-2 mt-0-5">
-                        <Text variant="body-sm" color="secondary">{company?.name}</Text>
-                        <span className="text-foreground-muted">·</span>
-                        <Text variant="caption" color="muted"><MapPin className="inline size-3" /> {job.location}</Text>
-                      </div>
-                      <Text variant="body-sm" color="muted" className="mt-2 line-clamp-2">{job.description.slice(0, 150)}...</Text>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {job.skillsRequired.slice(0, 5).map((s) => <Badge key={s} size="sm" variant="outline">{s}</Badge>)}
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                      {company?.logoUrl ? (
+                        <img src={company.logoUrl} alt="" className="size-11 rounded-lg object-cover border border-border shrink-0" />
+                      ) : (
+                        <div className="flex size-11 items-center justify-center rounded-lg bg-neutral-100 shrink-0"><Building2 className="size-5 text-foreground-muted" /></div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <Text variant="subtitle">{job.title}</Text>
+                        <div className="flex items-center gap-2 mt-0-5 flex-wrap">
+                          <Text variant="body-sm" color="secondary">{company?.name}</Text>
+                          <span className="text-foreground-muted hidden sm:inline">·</span>
+                          <Text variant="caption" color="muted" className="shrink-0"><MapPin className="inline size-3" /> {job.location}</Text>
+                        </div>
+                        <Text variant="body-sm" color="muted" className="mt-2 line-clamp-2">{job.description.slice(0, 150)}...</Text>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {job.skillsRequired.slice(0, 5).map((s) => <Badge key={s} size="sm" variant="outline">{s}</Badge>)}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Button variant="outline" size="sm" onClick={() => { setActionJobId(job._id); approveMutation.mutate(job._id); }} loading={approveMutation.isPending && actionJobId === job._id} leftIcon={<CheckCircle />}>Approve</Button>
-                      <Button variant="ghost" size="sm" onClick={() => { setActionJobId(job._id); rejectMutation.mutate({ jobId: job._id }); }} loading={rejectMutation.isPending && actionJobId === job._id} className="text-danger-600" leftIcon={<XCircle />}>Reject</Button>
+                    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto border-t sm:border-0 border-border pt-3 sm:pt-0">
+                      <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => { setActionJobId(job._id); approveMutation.mutate(job._id); }} loading={approveMutation.isPending && actionJobId === job._id} leftIcon={<CheckCircle />}>Approve</Button>
+                      <Button variant="ghost" size="sm" className="flex-1 sm:flex-none text-danger-600" onClick={() => { setActionJobId(job._id); rejectMutation.mutate({ jobId: job._id }); }} loading={rejectMutation.isPending && actionJobId === job._id} leftIcon={<XCircle />}>Reject</Button>
                     </div>
                   </div>
                 </Surface>
