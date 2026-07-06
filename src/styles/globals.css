@@ -62,4 +62,13 @@
   .text-pretty {
     text-wrap: pretty;
   }
+
+  /* Sidebar transition helpers */
+  .transition-visibility {
+    transition-property: visibility;
+  }
+
+  .backdrop-blur-xs {
+    backdrop-filter: blur(2px);
+  }
 }

@@ -39,12 +39,16 @@ export function useUnreadNotificationCount() {
 
 export function useMarkNotificationRead() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: (notificationId: string) => notificationsService.markAsRead(notificationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.all });
       queryClient.invalidateQueries({ queryKey: notificationKeys.unreadCount });
+    },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Failed to mark as read', description: error.response?.data?.message });
     },
   });
 }
@@ -60,17 +64,24 @@ export function useMarkAllNotificationsRead() {
       queryClient.setQueryData(notificationKeys.unreadCount, 0);
       toast({ variant: 'success', title: 'All marked as read' });
     },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Failed', description: error.response?.data?.message });
+    },
   });
 }
 
 export function useDeleteNotification() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: (notificationId: string) => notificationsService.deleteNotification(notificationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.all });
       queryClient.invalidateQueries({ queryKey: notificationKeys.unreadCount });
+    },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Failed to delete', description: error.response?.data?.message });
     },
   });
 }

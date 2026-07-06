@@ -1,7 +1,9 @@
 import { cn } from '@/lib/utils';
-import { NavLink } from 'react-router';
-import { useState } from 'react';
+import { NavLink, useLocation } from 'react-router';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuthStore } from '@/stores/auth.store';
+import { useSidebarStore } from '@/stores/sidebar.store';
 import { Avatar, Text, Modal, ModalHeader, ModalBody, ModalFooter, Button } from '@/components/ui';
 import { useLogout } from '@/hooks/useAuth';
 import type { ReactNode } from 'react';
@@ -20,6 +22,7 @@ import {
   Sparkles,
   CreditCard,
   Megaphone,
+  X,
 } from 'lucide-react';
 import { UserRole } from '@/types';
 
@@ -32,9 +35,13 @@ interface NavItemProps {
 }
 
 function NavItem({ to, icon, label, badge }: NavItemProps) {
+  const close = useSidebarStore((s) => s.close);
+
   return (
     <NavLink
       to={to}
+      end
+      onClick={close}
       className={({ isActive }) =>
         cn(
           'flex items-center gap-3 px-3 py-2',
@@ -100,8 +107,8 @@ function getNavItems(role: UserRole): NavItemProps[] {
   }
 }
 
-/* ─── Sidebar Component ─── */
-export function Sidebar() {
+/* ─── Sidebar Content (shared between desktop & mobile) ─── */
+function SidebarContent() {
   const { user, role } = useAuthStore();
   const logoutMutation = useLogout();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -119,7 +126,7 @@ export function Sidebar() {
   const roleLabel = role === UserRole.ADMIN ? 'Admin' : role === UserRole.EMPLOYER ? 'Employer' : 'Job Seeker';
 
   return (
-    <aside className="flex h-screen w-[260px] shrink-0 flex-col border-r border-border bg-surface-elevated">
+    <>
       {/* Brand */}
       <div className="flex items-center gap-2 px-5 py-5 border-b border-border">
         <div className="flex size-8 items-center justify-center rounded-lg bg-primary-600">
@@ -185,6 +192,96 @@ export function Sidebar() {
           </Button>
         </ModalFooter>
       </Modal>
+    </>
+  );
+}
+
+/* ─── Desktop Sidebar ─── */
+function DesktopSidebar() {
+  return (
+    <aside className="hidden lg:flex h-screen w-[260px] shrink-0 flex-col border-r border-border bg-surface-elevated">
+      <SidebarContent />
     </aside>
+  );
+}
+
+/* ─── Mobile Sidebar (slide-over drawer) ─── */
+function MobileSidebar() {
+  const { isOpen, close } = useSidebarStore();
+  const location = useLocation();
+
+  // Close sidebar on route change
+  useEffect(() => {
+    close();
+  }, [location.pathname, close]);
+
+  // Lock body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  return createPortal(
+    <div
+      className={cn(
+        'fixed inset-0 z-modal lg:hidden',
+        'transition-visibility duration-normal',
+        isOpen ? 'visible' : 'invisible',
+      )}
+    >
+      {/* Backdrop */}
+      <div
+        className={cn(
+          'absolute inset-0 bg-neutral-950/50 backdrop-blur-xs',
+          'transition-opacity duration-normal ease-default',
+          isOpen ? 'opacity-100' : 'opacity-0',
+        )}
+        onClick={close}
+        aria-hidden="true"
+      />
+
+      {/* Drawer */}
+      <aside
+        className={cn(
+          'relative flex h-full w-[280px] max-w-[85vw] flex-col',
+          'bg-surface-elevated shadow-xl',
+          'transition-transform duration-normal ease-default',
+          isOpen ? 'translate-x-0' : '-translate-x-full',
+        )}
+      >
+        {/* Close button */}
+        <button
+          onClick={close}
+          className={cn(
+            'absolute top-4 right-4 z-10',
+            'flex size-8 items-center justify-center rounded-lg',
+            'text-foreground-secondary hover:text-foreground hover:bg-neutral-100',
+            'transition-colors duration-fast',
+          )}
+          aria-label="Close navigation"
+        >
+          <X className="size-5" />
+        </button>
+
+        <SidebarContent />
+      </aside>
+    </div>,
+    document.body,
+  );
+}
+
+/* ─── Sidebar Component ─── */
+export function Sidebar() {
+  return (
+    <>
+      <DesktopSidebar />
+      <MobileSidebar />
+    </>
   );
 }

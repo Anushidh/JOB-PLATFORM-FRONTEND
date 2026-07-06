@@ -48,16 +48,16 @@ export function JobAlertsPage() {
   return (
     <Container size="lg" className="py-6">
       <Stack gap={6}>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center justify-between">
             <Text variant="h2">Job Alerts</Text>
-            <Text variant="body" color="secondary" className="mt-1">
-              Get notified when jobs matching your criteria are posted
-            </Text>
+            <Button leftIcon={<Plus />} onClick={() => setShowCreate(true)} className="shrink-0 ml-2">
+              New Alert
+            </Button>
           </div>
-          <Button leftIcon={<Plus />} onClick={() => setShowCreate(true)}>
-            New Alert
-          </Button>
+          <Text variant="body" color="secondary" className="max-w-[85%] md:max-w-none">
+            Get notified when jobs matching your criteria are posted
+          </Text>
         </div>
 
         {isLoading ? (
@@ -234,7 +234,7 @@ function CreateAlertModal({ open, onClose, editAlert }: { open: boolean; onClose
 
   return (
     <Modal open={open} onClose={onClose} size="lg">
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="flex flex-col overflow-hidden min-h-0 w-full">
         <ModalHeader onClose={onClose}>{editAlert ? 'Edit Job Alert' : 'Create Job Alert'}</ModalHeader>
         <ModalBody>
           <Stack gap={4}>

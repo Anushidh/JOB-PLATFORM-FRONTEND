@@ -82,6 +82,9 @@ export function useSuspendUser() {
       queryClient.invalidateQueries({ queryKey: ['admin', role === 'employee' ? 'employees' : 'employers'] });
       toast({ variant: 'warning', title: 'User suspended' });
     },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Failed to suspend', description: error.response?.data?.message });
+    },
   });
 }
 
@@ -95,6 +98,9 @@ export function useReactivateUser() {
     onSuccess: (_data, { role }) => {
       queryClient.invalidateQueries({ queryKey: ['admin', role === 'employee' ? 'employees' : 'employers'] });
       toast({ variant: 'success', title: 'User reactivated' });
+    },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Failed to reactivate', description: error.response?.data?.message });
     },
   });
 }
@@ -110,6 +116,9 @@ export function useDeleteUser() {
       queryClient.invalidateQueries({ queryKey: ['admin', role === 'employee' ? 'employees' : 'employers'] });
       toast({ variant: 'info', title: 'User deleted' });
     },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Failed to delete', description: error.response?.data?.message });
+    },
   });
 }
 
@@ -124,6 +133,9 @@ export function useApproveJob() {
       queryClient.invalidateQueries({ queryKey: adminKeys.stats });
       toast({ variant: 'success', title: 'Job approved' });
     },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Failed to approve', description: error.response?.data?.message });
+    },
   });
 }
 
@@ -137,6 +149,9 @@ export function useRejectJob() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'pending-jobs'] });
       toast({ variant: 'info', title: 'Job rejected' });
+    },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Failed to reject', description: error.response?.data?.message });
     },
   });
 }

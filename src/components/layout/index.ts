@@ -1,4 +1,5 @@
-export { AppShell } from './AppShell';
-export { AuthLayout } from './AuthLayout';
-export { Sidebar } from './Sidebar';
-export { TopBar } from './TopBar';
+export * from './AppShell';
+export * from './AuthLayout';
+export * from './Sidebar';
+export * from './TopBar';
+export * from './CommandPalette';

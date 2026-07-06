@@ -74,5 +74,8 @@ export function useDeleteConversation() {
       queryClient.invalidateQueries({ queryKey: messageKeys.all });
       toast({ variant: 'info', title: 'Conversation deleted' });
     },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Failed to delete', description: error.response?.data?.message });
+    },
   });
 }
