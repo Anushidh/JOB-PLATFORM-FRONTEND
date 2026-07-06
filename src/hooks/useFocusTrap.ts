@@ -1,15 +1,9 @@
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 
 export function useFocusTrap<T extends HTMLElement>() {
   const ref = useRef<T>(null);
 
-  // Auto-focus first input field on mount
-  useEffect(() => {
-    const firstInput = ref.current?.querySelector<HTMLElement>(
-      `input:not([disabled]):not([type="hidden"]),textarea:not([disabled]),select:not([disabled])`
-    );
-    firstInput?.focus();
-  }, []);
+
 
   const handleKeyDown = (e: React.KeyboardEvent<T>) => {
     if (e.key !== 'Tab') return;
