@@ -110,7 +110,7 @@ export function CompanyDetailsPage() {
       <Container size="lg">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content Area */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 order-2 lg:order-1">
             <Stack gap={6}>
               <div>
                 <Text variant="h4" className="mb-4">About {company.name}</Text>
@@ -143,7 +143,7 @@ export function CompanyDetailsPage() {
           </div>
 
           {/* Sidebar Area */}
-          <div>
+          <div className="order-1 lg:order-2">
             <Surface variant="flat" padding="lg">
               <Text variant="h5" className="mb-4">Company Overview</Text>
               <Stack gap={4}>
