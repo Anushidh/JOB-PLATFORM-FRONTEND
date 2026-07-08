@@ -69,6 +69,7 @@ export function CreateJobPage() {
     reset,
     watch,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(createJobSchema),
@@ -79,8 +80,10 @@ export function CreateJobPage() {
   useEffect(() => {
     if (selectedWorkMode === 'remote') {
       setValue('location', 'Worldwide');
+    } else if (getValues('location') === 'Worldwide') {
+      setValue('location', '');
     }
-  }, [selectedWorkMode, setValue]);
+  }, [selectedWorkMode, setValue, getValues]);
 
   // Pre-fill from AI-generated draft if available
   const draft = useJobDraftStore((s) => s.draft);
