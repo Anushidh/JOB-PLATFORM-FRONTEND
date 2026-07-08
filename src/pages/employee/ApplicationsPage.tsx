@@ -168,12 +168,12 @@ function ApplicationCard({
 
   return (
     <Surface variant="elevated" padding="md">
-      <div className="flex items-center gap-4">
+      <div className="flex items-start gap-3 sm:gap-4">
         {/* Company Logo */}
         {company?.logoUrl ? (
-          <img src={company.logoUrl} alt={company.name} className="size-11 rounded-lg object-cover border border-border shrink-0" />
+          <img src={company.logoUrl} alt={company.name} className="size-11 rounded-lg object-cover border border-border shrink-0 mt-0.5" />
         ) : (
-          <div className="flex size-11 items-center justify-center rounded-lg bg-neutral-100 shrink-0">
+          <div className="flex size-11 items-center justify-center rounded-lg bg-neutral-100 shrink-0 mt-0.5">
             <Building2 className="size-5 text-foreground-muted" />
           </div>
         )}
@@ -184,16 +184,16 @@ function ApplicationCard({
             <Text variant="subtitle" className="truncate">
               {job?.title || 'Job'}
             </Text>
-            <Badge variant={config.variant} size="sm">
+            <Badge variant={config.variant} size="sm" className="shrink-0">
               {config.label}
             </Badge>
           </div>
-          <div className="flex items-center gap-3 mt-0-5">
-            <Text variant="body-sm" color="secondary">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2 mt-1">
+            <Text variant="body-sm" color="secondary" className="truncate">
               {company?.name || 'Company'}
             </Text>
-            <span className="text-foreground-muted">·</span>
-            <Text variant="caption" color="muted">
+            <span className="text-foreground-muted hidden sm:inline">·</span>
+            <Text variant="caption" color="muted" className="shrink-0">
               <Calendar className="inline size-3 mr-1" />
               Applied {appliedDate}
             </Text>
@@ -201,7 +201,7 @@ function ApplicationCard({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 pt-1">
           {canWithdraw && (
             <Button
               variant="ghost"
