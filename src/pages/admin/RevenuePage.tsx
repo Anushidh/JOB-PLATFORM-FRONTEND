@@ -65,7 +65,7 @@ export function RevenuePage() {
                     const exportData = payments.data.map((p: any) => ({
                       User: p.user?.firstName ? `${p.user.firstName} ${p.user.lastName}` : p.user?.email || '—',
                       Plan: p.plan,
-                      'Amount (₹)': (p.amount / 100),
+                      'Amount (INR)': (p.amount / 100),
                       Status: p.status,
                       Date: new Date(p.createdAt).toLocaleDateString(),
                     }));
@@ -80,7 +80,7 @@ export function RevenuePage() {
                     const exportData = payments.data.map((p: any) => ({
                       User: p.user?.firstName ? `${p.user.firstName} ${p.user.lastName}` : p.user?.email || '—',
                       Plan: p.plan,
-                      'Amount (₹)': (p.amount / 100),
+                      'Amount (INR)': (p.amount / 100),
                       Status: p.status,
                       Date: new Date(p.createdAt).toLocaleDateString(),
                     }));
