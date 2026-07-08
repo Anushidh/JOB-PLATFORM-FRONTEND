@@ -1,4 +1,6 @@
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 /**
  * Exports an array of objects to an Excel (.xlsx) file and triggers download.
@@ -15,4 +17,33 @@ export function exportToExcel(data: Record<string, any>[], filename: string, she
   worksheet['!cols'] = colWidths;
 
   XLSX.writeFile(workbook, `${filename}.xlsx`);
+}
+
+/**
+ * Exports an array of objects to a PDF file and triggers download.
+ */
+export function exportToPDF(data: Record<string, any>[], filename: string, title: string = 'Report') {
+  if (!data || data.length === 0) return;
+
+  const doc = new jsPDF();
+  const headers = Object.keys(data[0]);
+  const body = data.map((row) => headers.map((header) => String(row[header] || '')));
+
+  // Title and Date
+  doc.setFontSize(16);
+  doc.text(title, 14, 15);
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 22);
+
+  // Table
+  autoTable(doc, {
+    head: [headers],
+    body: body,
+    startY: 28,
+    theme: 'grid',
+    headStyles: { fillColor: [99, 102, 241] }, // Indigo 500
+  });
+
+  doc.save(`${filename}.pdf`);
 }

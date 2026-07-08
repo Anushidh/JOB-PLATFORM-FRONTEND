@@ -4,8 +4,9 @@ import {
   Container, Stack, Text, Button, Badge, Surface, Grid, Spinner,
 } from '@/components/ui';
 import { adminService } from '@/services/admin.service';
-import { exportToExcel } from '@/lib/export';
-import { CreditCard, TrendingUp, Users, DollarSign, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { exportToExcel, exportToPDF } from '@/lib/export';
+import { Dropdown, DropdownItem } from '@/components/ui/dropdown';
+import { CreditCard, TrendingUp, Users, DollarSign, ChevronLeft, ChevronRight, Download, FileText, Table } from 'lucide-react';
 
 export function RevenuePage() {
   const [page, setPage] = useState(1);
@@ -53,23 +54,42 @@ export function RevenuePage() {
           <div className="flex items-center justify-between mb-4">
             <Text variant="h5">Payment History</Text>
             {payments?.data && payments.data.length > 0 && (
-              <Button
-                variant="outline"
-                size="xs"
-                leftIcon={<Download />}
-                onClick={() => {
-                  const exportData = payments.data.map((p: any) => ({
-                    User: p.user?.firstName ? `${p.user.firstName} ${p.user.lastName}` : p.user?.email || '—',
-                    Plan: p.plan,
-                    'Amount (₹)': (p.amount / 100),
-                    Status: p.status,
-                    Date: new Date(p.createdAt).toLocaleDateString(),
-                  }));
-                  exportToExcel(exportData, 'payment-history');
-                }}
-              >
-                Export
-              </Button>
+              <Dropdown align="end" trigger={
+                <Button variant="outline" size="xs" leftIcon={<Download />}>
+                  Export
+                </Button>
+              }>
+                <DropdownItem 
+                  icon={<Table />} 
+                  onClick={() => {
+                    const exportData = payments.data.map((p: any) => ({
+                      User: p.user?.firstName ? `${p.user.firstName} ${p.user.lastName}` : p.user?.email || '—',
+                      Plan: p.plan,
+                      'Amount (₹)': (p.amount / 100),
+                      Status: p.status,
+                      Date: new Date(p.createdAt).toLocaleDateString(),
+                    }));
+                    exportToExcel(exportData, 'payment-history');
+                  }}
+                >
+                  Export as Excel
+                </DropdownItem>
+                <DropdownItem 
+                  icon={<FileText />} 
+                  onClick={() => {
+                    const exportData = payments.data.map((p: any) => ({
+                      User: p.user?.firstName ? `${p.user.firstName} ${p.user.lastName}` : p.user?.email || '—',
+                      Plan: p.plan,
+                      'Amount (₹)': (p.amount / 100),
+                      Status: p.status,
+                      Date: new Date(p.createdAt).toLocaleDateString(),
+                    }));
+                    exportToPDF(exportData, 'payment-history', 'Payment History Report');
+                  }}
+                >
+                  Export as PDF
+                </DropdownItem>
+              </Dropdown>
             )}
           </div>
 
