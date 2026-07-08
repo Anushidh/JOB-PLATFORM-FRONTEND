@@ -83,12 +83,20 @@ function JobDescriptionGenerator() {
             { value: 'part-time', label: 'Part-time' },
             { value: 'contract', label: 'Contract' },
           ]} />
-          <Select label="Work Mode" value={workMode} onChange={(e) => setWorkMode(e.target.value)} selectSize="sm" options={[
+          <Select label="Work Mode" value={workMode} onChange={(e) => {
+            const newMode = e.target.value;
+            setWorkMode(newMode);
+            if (newMode === 'remote') {
+              setLocation('Worldwide');
+            } else if (location === 'Worldwide') {
+              setLocation('');
+            }
+          }} selectSize="sm" options={[
             { value: 'remote', label: 'Remote' },
             { value: 'hybrid', label: 'Hybrid' },
             { value: 'onsite', label: 'Onsite' },
           ]} />
-          <Input label="Location" placeholder="e.g. Bangalore, India" value={location} onChange={(e) => setLocation(e.target.value)} inputSize="sm" />
+          <Input label="Location" placeholder="e.g. Bangalore, India" value={location} onChange={(e) => setLocation(e.target.value)} inputSize="sm" disabled={workMode === 'remote'} />
         </div>
 
         <Button
