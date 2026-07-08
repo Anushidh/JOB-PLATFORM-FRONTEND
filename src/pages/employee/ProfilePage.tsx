@@ -71,7 +71,7 @@ export function ProfilePage() {
     onSuccess: (data) => {
       setUser({ ...employee, avatar: data.url }, role!);
       queryClient.invalidateQueries({ queryKey: ['user'] });
-      toast({ variant: 'success', title: 'Avatar updated' });
+      toast({ variant: 'success', title: 'Profile picture updated' });
     },
     onError: () => { toast({ variant: 'error', title: 'Upload failed' }); },
   });
