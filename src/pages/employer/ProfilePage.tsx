@@ -73,9 +73,9 @@ export function EmployerProfilePage() {
     updateMutation.mutate({
       firstName: data.firstName,
       lastName: data.lastName,
-      phone: data.phone || undefined,
-      position: data.position || undefined,
-      department: data.department || undefined,
+      phone: data.phone || '',
+      position: data.position || '',
+      department: data.department || '',
     });
   };
 
