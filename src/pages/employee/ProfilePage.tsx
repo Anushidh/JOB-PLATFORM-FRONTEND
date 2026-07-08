@@ -148,8 +148,8 @@ export function ProfilePage() {
 
         {/* Profile Header */}
         <Surface variant="elevated" padding="lg">
-          <div className="flex items-center gap-5">
-            <div className="relative group">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+            <div className="relative group shrink-0">
               <Avatar size="2xl" src={employee?.avatar} fallback={`${employee?.firstName} ${employee?.lastName}`} />
               <button
                 type="button"
@@ -160,16 +160,16 @@ export function ProfilePage() {
               </button>
               <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && avatarMutation.mutate(e.target.files[0])} />
             </div>
-            <div>
-              <Text variant="h3">{employee?.firstName} {employee?.lastName}</Text>
-              {employee?.headline && <Text variant="body" color="secondary" className="mt-0.5">{employee.headline}</Text>}
-              <div className="flex items-center gap-4 mt-2">
+            <div className="min-w-0 w-full">
+              <Text variant="h3" className="truncate">{employee?.firstName} {employee?.lastName}</Text>
+              {employee?.headline && <Text variant="body" color="secondary" className="mt-0.5 truncate">{employee.headline}</Text>}
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-y-2 gap-x-4 mt-2">
                 {employee?.location && (
-                  <span className="flex items-center gap-1 text-sm text-foreground-muted"><MapPin className="size-3.5" /> {employee.location}</span>
+                  <span className="flex items-center gap-1 text-sm text-foreground-muted min-w-0"><MapPin className="size-3.5 shrink-0" /> <span className="truncate">{employee.location}</span></span>
                 )}
-                <span className="flex items-center gap-1 text-sm text-foreground-muted"><Mail className="size-3.5" /> {employee?.email}</span>
+                <span className="flex items-center gap-1 text-sm text-foreground-muted min-w-0"><Mail className="size-3.5 shrink-0" /> <span className="truncate">{employee?.email}</span></span>
               </div>
-              <div className="flex gap-2 mt-3">
+              <div className="flex justify-center sm:justify-start gap-2 mt-4">
                 <Button variant="outline" size="xs" onClick={() => resumeInputRef.current?.click()} leftIcon={<Upload />} loading={resumeMutation.isPending}>
                   {employee?.resumePath ? 'Update Resume' : 'Upload Resume'}
                 </Button>
