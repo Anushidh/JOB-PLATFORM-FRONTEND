@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Container, Stack, Text, Button, Input, Surface, Avatar, Badge,
   Tabs, TabList, TabTrigger, TabContent, useToast,
@@ -31,10 +31,11 @@ type ProfileForm = z.infer<typeof profileSchema>;
 type PasswordForm = z.infer<typeof passwordSchema>;
 
 export function EmployerProfilePage() {
-  const { user } = useAuthStore();
+  const { user, setUser, role } = useAuthStore();
   const employer = user as Employer;
   const { toast } = useToast();
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
 
   const { data: completionData } = useProfileCompletion();
   const updateMutation = useUpdateEmployerProfile();
@@ -47,9 +48,10 @@ export function EmployerProfilePage() {
       const { data } = await api.post('/uploads/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       return data.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setUser({ ...employer, avatar: data.url }, role!);
+      queryClient.invalidateQueries({ queryKey: ['user'] });
       toast({ variant: 'success', title: 'Avatar updated' });
-      window.location.reload();
     },
     onError: () => { toast({ variant: 'error', title: 'Upload failed' }); },
   });
