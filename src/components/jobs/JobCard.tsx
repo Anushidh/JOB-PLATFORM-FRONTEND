@@ -36,7 +36,7 @@ export function JobCard({ job }: { job: Job }) {
       <Stack gap={4}>
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             {/* Make the logo clickable to company details */}
             <Link to={`/employee/companies/${company?._id}`} className="shrink-0 hover:opacity-80 transition-opacity">
               {company?.logoUrl ? (

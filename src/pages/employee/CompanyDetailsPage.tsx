@@ -146,12 +146,12 @@ export function CompanyDetailsPage() {
           <div className="order-1 lg:order-2">
             <Surface variant="flat" padding="lg">
               <Text variant="h5" className="mb-4">Company Overview</Text>
-              <Stack gap={4}>
+              <div className="grid grid-cols-2 lg:grid-cols-1 gap-y-4 gap-x-2">
                 {company.website && (
-                  <div>
+                  <div className="col-span-2 lg:col-span-1">
                     <Text variant="body-sm" color="secondary" className="mb-1 uppercase font-semibold tracking-wider">Website</Text>
                     <a href={company.website} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-primary-600 hover:underline">
-                      <Globe className="size-4" /> {company.website.replace(/^https?:\/\//, '')} <ExternalLink className="size-3" />
+                      <Globe className="size-4 shrink-0" /> <span className="truncate">{company.website.replace(/^https?:\/\//, '')}</span> <ExternalLink className="size-3 shrink-0" />
                     </a>
                   </div>
                 )}
@@ -176,7 +176,7 @@ export function CompanyDetailsPage() {
                     <Text variant="body">{company.size}</Text>
                   </div>
                 )}
-              </Stack>
+              </div>
             </Surface>
           </div>
         </div>
