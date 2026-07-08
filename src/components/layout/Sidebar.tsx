@@ -73,6 +73,7 @@ function getNavItems(role: UserRole): NavItemProps[] {
         { to: '/employee/jobs', icon: <Briefcase />, label: 'Find Jobs' },
         { to: '/employee/applications', icon: <FileText />, label: 'My Applications' },
         { to: '/employee/saved', icon: <Bookmark />, label: 'Saved Jobs' },
+        { to: '/employee/following', icon: <Building2 />, label: 'Following' },
         { to: '/employee/alerts', icon: <Bell />, label: 'Job Alerts' },
         { to: '/employee/messages', icon: <MessageSquare />, label: 'Messages' },
         { to: '/employee/notifications', icon: <Bell />, label: 'Notifications' },

@@ -4,9 +4,10 @@ import { z } from 'zod';
 import {
   Container, Stack, Text, Button, Input, Textarea, Select, Surface, Spinner, useToast,
 } from '@/components/ui';
-import { useMyCompany, useCreateCompany, useUpdateCompany } from '@/hooks/useCompanies';
+import { useMyCompany, useCreateCompany, useUpdateCompany, useUploadCompanyLogo } from '@/hooks/useCompanies';
 import type { Company } from '@/types';
-import { Building2, Save, Globe, MapPin } from 'lucide-react';
+import { Building2, Save, Globe, MapPin, Upload, Image as ImageIcon } from 'lucide-react';
+import { useRef } from 'react';
 
 const companySchema = z.object({
   name: z.string().min(2, 'Company name required').max(200),
@@ -24,6 +25,8 @@ export function CompanyPage() {
   const { data: company, isLoading } = useMyCompany();
   const createMutation = useCreateCompany();
   const updateMutation = useUpdateCompany(company?._id || '');
+  const uploadLogoMutation = useUploadCompanyLogo();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -74,13 +77,38 @@ export function CompanyPage() {
           </Text>
         </div>
 
-        {company?.logoUrl && (
+        {company && (
           <Surface variant="flat" padding="md">
             <div className="flex items-center gap-4">
-              <img src={company.logoUrl} alt={company.name} className="size-16 rounded-xl object-cover border border-border" />
+              <div 
+                className="relative size-16 group cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {company.logoUrl ? (
+                  <img src={company.logoUrl} alt={company.name} className="size-16 rounded-xl object-cover border border-border" />
+                ) : (
+                  <div className="flex size-16 items-center justify-center rounded-xl bg-neutral-100 border border-border">
+                    <Building2 className="size-8 text-foreground-muted" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  {uploadLogoMutation.isPending ? <Spinner size="sm" className="text-white" /> : <Upload className="size-5 text-white" />}
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      uploadLogoMutation.mutate(e.target.files[0]);
+                    }
+                  }}
+                />
+              </div>
               <div>
                 <Text variant="h4">{company.name}</Text>
-                {company.industry && <Text variant="body-sm" color="secondary">{company.industry}</Text>}
+                <Text variant="body-sm" color="secondary">Click logo to upload a new one</Text>
               </div>
             </div>
           </Surface>

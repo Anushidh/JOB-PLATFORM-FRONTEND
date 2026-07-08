@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSearchParams, Link } from 'react-router';
 import {
   Container, Stack, Grid, Text, Input, Select, Button, Badge,
-  Surface, Spinner, EmptyState, Divider,
+  Surface, Spinner, EmptyState, Divider, Checkbox,
 } from '@/components/ui';
 import { useJobs } from '@/hooks/useJobs';
 import type { JobFilters } from '@/services/jobs.service';
@@ -26,6 +26,7 @@ export function JobsPage() {
     workMode: searchParams.get('workMode') || undefined,
     experienceLevel: searchParams.get('experienceLevel') || undefined,
     skills: searchParams.get('skills') || undefined,
+    following: searchParams.get('following') === 'true' || undefined,
   };
 
   const { data, isLoading } = useJobs(filters);
@@ -52,7 +53,7 @@ export function JobsPage() {
   };
 
   const activeFilterCount = [
-    filters.location, filters.jobType, filters.workMode, filters.experienceLevel, filters.skills,
+    filters.location, filters.jobType, filters.workMode, filters.experienceLevel, filters.skills, filters.following,
   ].filter(Boolean).length;
 
   return (
@@ -153,6 +154,13 @@ export function JobsPage() {
                     { value: 'lead', label: 'Lead' },
                     { value: 'executive', label: 'Executive' },
                   ]}
+                />
+              </div>
+              <div className="flex items-center justify-between mt-4">
+                <Checkbox
+                  label="Only show jobs from companies I follow"
+                  checked={!!filters.following}
+                  onChange={(e) => updateFilter('following', e.target.checked ? 'true' : '')}
                 />
                 <Button variant="ghost" size="sm" onClick={clearFilters} leftIcon={<X />}>
                   Clear all

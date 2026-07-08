@@ -30,6 +30,7 @@ const JobsPage = lazy(() => import('@/pages/employee/JobsPage').then(m => ({ def
 const JobDetailPage = lazy(() => import('@/pages/employee/JobDetailPage').then(m => ({ default: m.JobDetailPage })));
 const ApplicationsPage = lazy(() => import('@/pages/employee/ApplicationsPage').then(m => ({ default: m.ApplicationsPage })));
 const SavedJobsPage = lazy(() => import('@/pages/employee/SavedJobsPage').then(m => ({ default: m.SavedJobsPage })));
+const FollowingPage = lazy(() => import('@/pages/employee/FollowingPage').then(m => ({ default: m.FollowingPage })));
 const JobAlertsPage = lazy(() => import('@/pages/employee/JobAlertsPage').then(m => ({ default: m.JobAlertsPage })));
 const EmployeeAIToolsPage = lazy(() => import('@/pages/employee/AIToolsPage').then(m => ({ default: m.EmployeeAIToolsPage })));
 const ProfilePage = lazy(() => import('@/pages/employee/ProfilePage').then(m => ({ default: m.ProfilePage })));
@@ -98,6 +99,7 @@ export function AppRoutes() {
             <Route path="/employee/jobs/:jobId" element={<JobDetailPage />} />
             <Route path="/employee/applications" element={<ApplicationsPage />} />
             <Route path="/employee/saved" element={<SavedJobsPage />} />
+            <Route path="/employee/following" element={<FollowingPage />} />
             <Route path="/employee/alerts" element={<JobAlertsPage />} />
             <Route path="/employee/messages" element={<MessagesPage />} />
             <Route path="/employee/notifications" element={<NotificationsPage />} />

@@ -49,4 +49,7 @@ export const companiesService = {
 
   getFollowerCount: (companyId: string) =>
     api.get<ApiResponse<{ count: number }>>(`/company-follows/${companyId}/followers/count`),
+
+  getFollowedCompanies: () =>
+    api.get<ApiResponse<{ companies: Array<{ _id: string; company: Company; createdAt: string }> }>>('/company-follows/my/following'),
 };

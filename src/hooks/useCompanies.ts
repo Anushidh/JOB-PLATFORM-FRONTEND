@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { companiesService } from '@/services/companies.service';
 import { useToast } from '@/components/ui';
 import type { CreateCompanyRequest, UpdateCompanyRequest } from '@/services/companies.service';
+import { uploadService } from '@/services/upload.service';
 import type { PaginationParams } from '@/types';
 
 /* ─── Query Keys ─── */
@@ -12,6 +13,7 @@ export const companyKeys = {
   detail: (id: string) => [...companyKeys.all, 'detail', id] as const,
   my: ['companies', 'my'] as const,
   following: (id: string) => [...companyKeys.all, 'following', id] as const,
+  followedList: ['companies', 'followed-list'] as const,
 };
 
 /* ─── Queries ─── */
@@ -58,6 +60,16 @@ export function useCheckFollowing(companyId: string) {
   });
 }
 
+export function useFollowedCompanies() {
+  return useQuery({
+    queryKey: companyKeys.followedList,
+    queryFn: async () => {
+      const { data } = await companiesService.getFollowedCompanies();
+      return data.data!.companies;
+    },
+  });
+}
+
 /* ─── Mutations ─── */
 
 export function useCreateCompany() {
@@ -101,6 +113,7 @@ export function useFollowCompany() {
     mutationFn: (companyId: string) => companiesService.followCompany(companyId),
     onSuccess: (_, companyId) => {
       queryClient.invalidateQueries({ queryKey: companyKeys.following(companyId) });
+      queryClient.invalidateQueries({ queryKey: companyKeys.followedList });
       toast({ variant: 'success', title: 'Following company' });
     },
     onError: (error: any) => {
@@ -117,10 +130,27 @@ export function useUnfollowCompany() {
     mutationFn: (companyId: string) => companiesService.unfollowCompany(companyId),
     onSuccess: (_, companyId) => {
       queryClient.invalidateQueries({ queryKey: companyKeys.following(companyId) });
+      queryClient.invalidateQueries({ queryKey: companyKeys.followedList });
       toast({ variant: 'success', title: 'Unfollowed company' });
     },
     onError: (error: any) => {
       toast({ variant: 'error', title: 'Failed to unfollow', description: error.response?.data?.message });
+    },
+  });
+}
+
+export function useUploadCompanyLogo() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (file: File) => uploadService.uploadCompanyLogo(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: companyKeys.my });
+      toast({ variant: 'success', title: 'Logo uploaded successfully' });
+    },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Upload failed', description: error.response?.data?.message });
     },
   });
 }
