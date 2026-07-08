@@ -71,7 +71,7 @@ function ToastContainer({
 }) {
   return createPortal(
     <div
-      className="fixed top-6 right-6 z-9999 flex flex-col gap-3 max-w-[380px] w-full pointer-events-none"
+      className="fixed z-9999 flex flex-col gap-3 max-w-[380px] w-[calc(100%-32px)] sm:w-full pointer-events-none top-4 left-1/2 -translate-x-1/2 sm:top-6 sm:right-6 sm:left-auto sm:translate-x-0"
       aria-live="polite"
       aria-atomic="false"
     >
