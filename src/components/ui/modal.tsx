@@ -122,6 +122,7 @@ export function ModalHeader({
       </div>
       {onClose && (
         <button
+          type="button"
           onClick={onClose}
           className={cn(
             'rounded-md p-1',
