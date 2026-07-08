@@ -67,10 +67,20 @@ export function CreateJobPage() {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(createJobSchema),
   });
+
+  const selectedWorkMode = watch('workMode');
+
+  useEffect(() => {
+    if (selectedWorkMode === 'remote') {
+      setValue('location', 'Worldwide');
+    }
+  }, [selectedWorkMode, setValue]);
 
   // Pre-fill from AI-generated draft if available
   const draft = useJobDraftStore((s) => s.draft);
@@ -182,6 +192,7 @@ export function CreateJobPage() {
                 <Input
                   label="Location"
                   placeholder="e.g. Mumbai, India"
+                  disabled={selectedWorkMode === 'remote'}
                   error={errors.location?.message}
                   {...register('location')}
                 />
