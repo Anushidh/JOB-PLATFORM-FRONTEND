@@ -210,32 +210,36 @@ export function JobDetailPage() {
                 </Text>
               )}
 
-              <div className="flex gap-3">
-                <Button size="lg" className="flex-1 sm:flex-none" onClick={() => applyMutation.mutate({})} disabled={hasApplied || applicationsLoading} loading={applyMutation.isPending || applicationsLoading}>
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+                <Button size="lg" className="w-full sm:w-auto" onClick={() => applyMutation.mutate({})} disabled={hasApplied || applicationsLoading} loading={applyMutation.isPending || applicationsLoading}>
                   {isWithdrawn ? 'Withdrawn' : hasApplied ? '✓ Applied' : '⚡ Quick Apply'}
                 </Button>
-                <Button size="lg" variant="outline" className="flex-1 sm:flex-none" onClick={() => setShowApplyModal(true)} disabled={hasApplied || applicationsLoading} leftIcon={<FileText className="size-4" />}>
+                <Button size="lg" variant="outline" className="w-full sm:w-auto" onClick={() => setShowApplyModal(true)} disabled={hasApplied || applicationsLoading} leftIcon={<FileText className="size-4" />}>
                   Apply with Cover Letter
                 </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={handleSave}
-                  leftIcon={isSaved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
-                >
-                  {isSaved ? 'Saved' : 'Save'}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    toast({ variant: 'success', title: 'Link copied to clipboard!' });
-                  }}
-                  aria-label="Share job"
-                >
-                  <Share2 className="size-4" />
-                </Button>
+                <div className="flex gap-3 w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="flex-1 sm:flex-none"
+                    onClick={handleSave}
+                    leftIcon={isSaved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
+                  >
+                    {isSaved ? 'Saved' : 'Save'}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    className="shrink-0 px-3"
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast({ variant: 'success', title: 'Link copied to clipboard!' });
+                    }}
+                    aria-label="Share job"
+                  >
+                    <Share2 className="size-5" />
+                  </Button>
+                </div>
               </div>
             </Stack>
           </Surface>
