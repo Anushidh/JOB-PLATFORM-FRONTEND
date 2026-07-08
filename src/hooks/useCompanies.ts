@@ -154,3 +154,19 @@ export function useUploadCompanyLogo() {
     },
   });
 }
+
+export function useUploadCompanyBanner() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (file: File) => uploadService.uploadCompanyBanner(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: companyKeys.my });
+      toast({ variant: 'success', title: 'Banner uploaded successfully' });
+    },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Upload failed', description: error.response?.data?.message });
+    },
+  });
+}

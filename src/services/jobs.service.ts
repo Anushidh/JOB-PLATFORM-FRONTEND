@@ -13,6 +13,7 @@ export interface JobFilters extends PaginationParams {
   salaryMin?: number;
   salaryMax?: number;
   following?: boolean;
+  company?: string;
 }
 
 export interface CreateJobRequest {

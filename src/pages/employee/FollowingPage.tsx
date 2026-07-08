@@ -53,15 +53,19 @@ function CompanyCard({ company }: { company: Company }) {
     <Surface variant="elevated" padding="md" className="flex flex-col h-full group transition-shadow hover:shadow-md group-hover:border-primary-200">
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          {company.logoUrl ? (
-            <img src={company.logoUrl} alt={company.name} className="size-12 rounded-lg object-cover border border-border" />
-          ) : (
-            <div className="flex size-12 items-center justify-center rounded-lg bg-neutral-100 border border-border">
-              <Building2 className="size-6 text-foreground-muted" />
-            </div>
-          )}
+          <Link to={`/employee/companies/${company._id}`} className="shrink-0 hover:opacity-80 transition-opacity">
+            {company.logoUrl ? (
+              <img src={company.logoUrl} alt={company.name} className="size-12 rounded-lg object-cover border border-border" />
+            ) : (
+              <div className="flex size-12 items-center justify-center rounded-lg bg-neutral-100 border border-border">
+                <Building2 className="size-6 text-foreground-muted" />
+              </div>
+            )}
+          </Link>
           <div className="min-w-0">
-            <Text variant="subtitle" className="truncate">{company.name}</Text>
+            <Link to={`/employee/companies/${company._id}`}>
+              <Text variant="subtitle" className="truncate hover:text-primary-600 transition-colors cursor-pointer">{company.name}</Text>
+            </Link>
             {company.industry && (
               <Text variant="body-sm" color="secondary" className="truncate">{company.industry}</Text>
             )}
@@ -90,9 +94,9 @@ function CompanyCard({ company }: { company: Company }) {
         >
           Unfollow
         </Button>
-        <Link to={`/employee/jobs?following=true`} className="flex-1">
+        <Link to={`/employee/companies/${company._id}`} className="flex-1">
           <Button variant="secondary" size="sm" fullWidth rightIcon={<ExternalLink className="size-3" />}>
-            View Jobs
+            View Profile
           </Button>
         </Link>
       </div>

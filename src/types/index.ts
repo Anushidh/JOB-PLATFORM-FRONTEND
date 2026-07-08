@@ -140,6 +140,7 @@ export interface Company {
   name: string;
   description?: string;
   logoUrl?: string;
+  bannerUrl?: string;
   website?: string;
   industry?: string;
   size?: string;

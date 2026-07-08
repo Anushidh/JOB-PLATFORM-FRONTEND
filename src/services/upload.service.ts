@@ -8,4 +8,12 @@ export const uploadService = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+
+  uploadCompanyBanner: (file: File) => {
+    const formData = new FormData();
+    formData.append('banner', file);
+    return api.post<ApiResponse<{ url: string; publicId: string }>>('/uploads/company-banner', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };

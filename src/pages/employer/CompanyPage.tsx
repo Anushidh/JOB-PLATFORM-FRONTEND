@@ -4,7 +4,7 @@ import { z } from 'zod';
 import {
   Container, Stack, Text, Button, Input, Textarea, Select, Surface, Spinner, useToast,
 } from '@/components/ui';
-import { useMyCompany, useCreateCompany, useUpdateCompany, useUploadCompanyLogo } from '@/hooks/useCompanies';
+import { useMyCompany, useCreateCompany, useUpdateCompany, useUploadCompanyLogo, useUploadCompanyBanner } from '@/hooks/useCompanies';
 import type { Company } from '@/types';
 import { Building2, Save, Globe, MapPin, Upload, Image as ImageIcon } from 'lucide-react';
 import { useRef } from 'react';
@@ -26,7 +26,9 @@ export function CompanyPage() {
   const createMutation = useCreateCompany();
   const updateMutation = useUpdateCompany(company?._id || '');
   const uploadLogoMutation = useUploadCompanyLogo();
+  const uploadBannerMutation = useUploadCompanyBanner();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -78,21 +80,58 @@ export function CompanyPage() {
         </div>
 
         {company && (
-          <Surface variant="flat" padding="md">
-            <div className="flex items-center gap-4">
+          <Surface variant="flat" padding="none" className="overflow-hidden">
+            {/* Banner Section */}
+            <div 
+              className="relative h-48 sm:h-64 bg-neutral-100 group cursor-pointer border-b border-border"
+              onClick={() => bannerInputRef.current?.click()}
+            >
+              {company.bannerUrl ? (
+                <img src={company.bannerUrl} alt="Banner" className="w-full h-full object-cover" />
+              ) : (
+                <div className="flex flex-col items-center justify-center w-full h-full text-foreground-muted">
+                  <ImageIcon className="size-10 mb-2 opacity-50" />
+                  <Text variant="body-sm">Click to upload banner (16:9)</Text>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
+                {uploadBannerMutation.isPending ? (
+                  <Spinner size="md" className="text-white" />
+                ) : (
+                  <>
+                    <Upload className="size-6 mb-2" />
+                    <Text variant="body-sm" className="text-white">Change Banner</Text>
+                  </>
+                )}
+              </div>
+              <input
+                type="file"
+                ref={bannerInputRef}
+                className="hidden"
+                accept="image/png, image/jpeg, image/webp"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    uploadBannerMutation.mutate(e.target.files[0]);
+                  }
+                }}
+              />
+            </div>
+
+            {/* Logo Section */}
+            <div className="px-6 pb-6 pt-4 flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-16 sm:-mt-12 relative z-10">
               <div 
-                className="relative size-16 group cursor-pointer"
+                className="relative size-24 group cursor-pointer rounded-xl bg-white p-1 shadow-sm border border-border"
                 onClick={() => fileInputRef.current?.click()}
               >
                 {company.logoUrl ? (
-                  <img src={company.logoUrl} alt={company.name} className="size-16 rounded-xl object-cover border border-border" />
+                  <img src={company.logoUrl} alt={company.name} className="size-full rounded-lg object-cover" />
                 ) : (
-                  <div className="flex size-16 items-center justify-center rounded-xl bg-neutral-100 border border-border">
-                    <Building2 className="size-8 text-foreground-muted" />
+                  <div className="flex size-full items-center justify-center rounded-lg bg-neutral-100">
+                    <Building2 className="size-10 text-foreground-muted" />
                   </div>
                 )}
-                <div className="absolute inset-0 bg-black/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  {uploadLogoMutation.isPending ? <Spinner size="sm" className="text-white" /> : <Upload className="size-5 text-white" />}
+                <div className="absolute inset-1 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  {uploadLogoMutation.isPending ? <Spinner size="sm" className="text-white" /> : <Upload className="size-6 text-white" />}
                 </div>
                 <input
                   type="file"
@@ -106,9 +145,9 @@ export function CompanyPage() {
                   }}
                 />
               </div>
-              <div>
-                <Text variant="h4">{company.name}</Text>
-                <Text variant="body-sm" color="secondary">Click logo to upload a new one</Text>
+              <div className="flex-1 pb-1">
+                <Text variant="h3" className="drop-shadow-sm">{company.name}</Text>
+                <Text variant="body-sm" color="secondary">Update your logo and banner to stand out.</Text>
               </div>
             </div>
           </Surface>
