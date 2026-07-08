@@ -47,6 +47,7 @@ export function TabList({ children, className }: { children: ReactNode; classNam
       role="tablist"
       className={cn(
         'flex items-center gap-1',
+        'overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
         'border-b border-border',
         'px-1',
         className,
@@ -80,7 +81,7 @@ export function TabTrigger({
       disabled={disabled}
       onClick={() => setActiveTab(value)}
       className={cn(
-        'relative px-3 py-2',
+        'relative px-3 py-2 shrink-0 whitespace-nowrap',
         'text-sm font-medium',
         'transition-colors duration-fast',
         'rounded-t-md',
