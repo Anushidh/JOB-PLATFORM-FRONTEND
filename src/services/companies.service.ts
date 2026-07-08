@@ -36,4 +36,17 @@ export const companiesService = {
 
   deleteCompany: (companyId: string) =>
     api.delete<ApiResponse<null>>(`/companies/${companyId}`),
+
+  // Company Follows
+  followCompany: (companyId: string) =>
+    api.post<ApiResponse<any>>(`/company-follows/${companyId}/follow`),
+
+  unfollowCompany: (companyId: string) =>
+    api.delete<ApiResponse<any>>(`/company-follows/${companyId}/follow`),
+
+  checkFollowing: (companyId: string) =>
+    api.get<ApiResponse<{ isFollowing: boolean }>>(`/company-follows/${companyId}/check`),
+
+  getFollowerCount: (companyId: string) =>
+    api.get<ApiResponse<{ count: number }>>(`/company-follows/${companyId}/followers/count`),
 };

@@ -7,6 +7,7 @@ import { useJob, useSimilarJobs } from '@/hooks/useJobs';
 import { jobsService } from '@/services/jobs.service';
 import { useCheckSaved, useSaveJob, useUnsaveJob } from '@/hooks/useSavedJobs';
 import { useApplyToJob, useMyApplications } from '@/hooks/useApplications';
+import { useCheckFollowing, useFollowCompany, useUnfollowCompany } from '@/hooks/useCompanies';
 import { NewMessageModal } from '@/components/NewMessageModal';
 import { useCoverLetterDraftStore } from '@/stores/coverLetterDraft.store';
 import { api } from '@/lib/api';
@@ -14,6 +15,7 @@ import type { Job, Company } from '@/types';
 import {
   ArrowLeft, MapPin, Briefcase, Clock, Building2, Globe, Users, Calendar,
   Bookmark, BookmarkCheck, ExternalLink, Share2, Send, MessageSquare, Sparkles, FileText,
+  UserPlus, UserCheck,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
@@ -79,6 +81,21 @@ export function JobDetailPage() {
   useEffect(() => {
     if (savedCheck !== undefined) setIsSaved(savedCheck);
   }, [savedCheck]);
+
+  // Company Follow
+  const companyId = typeof jobData?.company === 'string' ? jobData.company : (jobData?.company as any)?._id;
+  const { data: isFollowing } = useCheckFollowing(companyId || '');
+  const followMutation = useFollowCompany();
+  const unfollowMutation = useUnfollowCompany();
+
+  const handleFollowToggle = () => {
+    if (!companyId) return;
+    if (isFollowing) {
+      unfollowMutation.mutate(companyId);
+    } else {
+      followMutation.mutate(companyId);
+    }
+  };
 
   // Track view
   useEffect(() => {
@@ -303,9 +320,21 @@ export function JobDetailPage() {
                     <Globe className="size-3" /> Visit website
                   </a>
                 )}
-                <Button variant="outline" size="xs" onClick={() => setShowMessageModal(true)} leftIcon={<MessageSquare />}>
-                  Contact Employer
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant={isFollowing ? 'secondary' : 'primary'}
+                    size="xs"
+                    className="flex-1"
+                    onClick={handleFollowToggle}
+                    loading={followMutation.isPending || unfollowMutation.isPending}
+                    leftIcon={isFollowing ? <UserCheck className="size-3" /> : <UserPlus className="size-3" />}
+                  >
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </Button>
+                  <Button variant="outline" size="xs" className="flex-1" onClick={() => setShowMessageModal(true)} leftIcon={<MessageSquare className="size-3" />}>
+                    Contact
+                  </Button>
+                </div>
               </Stack>
             </Surface>
           )}

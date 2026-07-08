@@ -11,6 +11,7 @@ export const companyKeys = {
   list: (params: any) => [...companyKeys.all, 'list', params] as const,
   detail: (id: string) => [...companyKeys.all, 'detail', id] as const,
   my: ['companies', 'my'] as const,
+  following: (id: string) => [...companyKeys.all, 'following', id] as const,
 };
 
 /* ─── Queries ─── */
@@ -46,6 +47,17 @@ export function useMyCompany() {
   });
 }
 
+export function useCheckFollowing(companyId: string) {
+  return useQuery({
+    queryKey: companyKeys.following(companyId),
+    queryFn: async () => {
+      const { data } = await companiesService.checkFollowing(companyId);
+      return data.data!.isFollowing;
+    },
+    enabled: !!companyId,
+  });
+}
+
 /* ─── Mutations ─── */
 
 export function useCreateCompany() {
@@ -77,6 +89,38 @@ export function useUpdateCompany(companyId: string) {
     },
     onError: (error: any) => {
       toast({ variant: 'error', title: 'Update failed', description: error.response?.data?.message });
+    },
+  });
+}
+
+export function useFollowCompany() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (companyId: string) => companiesService.followCompany(companyId),
+    onSuccess: (_, companyId) => {
+      queryClient.invalidateQueries({ queryKey: companyKeys.following(companyId) });
+      toast({ variant: 'success', title: 'Following company' });
+    },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Failed to follow', description: error.response?.data?.message });
+    },
+  });
+}
+
+export function useUnfollowCompany() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (companyId: string) => companiesService.unfollowCompany(companyId),
+    onSuccess: (_, companyId) => {
+      queryClient.invalidateQueries({ queryKey: companyKeys.following(companyId) });
+      toast({ variant: 'success', title: 'Unfollowed company' });
+    },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Failed to unfollow', description: error.response?.data?.message });
     },
   });
 }
