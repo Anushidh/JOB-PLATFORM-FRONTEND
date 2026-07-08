@@ -118,7 +118,7 @@ export function CompanyPage() {
             </div>
 
             {/* Logo Section */}
-            <div className="px-6 pb-6 pt-4 flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-16 sm:-mt-12 relative z-10">
+            <div className="px-6 pb-6 pt-4 flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-16 sm:-mt-12 relative">
               <div 
                 className="relative size-24 group cursor-pointer rounded-xl bg-white p-1 shadow-sm border border-border"
                 onClick={() => fileInputRef.current?.click()}
