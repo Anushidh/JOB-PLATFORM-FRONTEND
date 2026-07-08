@@ -57,7 +57,7 @@ export function CompanyDetailsPage() {
         </div>
 
         <Container size="lg">
-          <div className="px-4 pb-6 pt-4 flex flex-col sm:flex-row items-start sm:items-end gap-6 -mt-16 sm:-mt-20 relative z-10">
+          <div className="px-4 pb-6 pt-4 flex flex-col sm:flex-row items-start sm:items-end gap-6 -mt-16 sm:-mt-20 relative">
             {/* Logo */}
             <div className="relative size-32 rounded-xl bg-white p-1.5 shadow-md border border-border">
               {company.logoUrl ? (
