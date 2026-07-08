@@ -37,7 +37,7 @@ function JobDescriptionGenerator() {
   const [experienceLevel, setExperienceLevel] = useState('mid');
   const [jobType, setJobType] = useState('full-time');
   const [workMode, setWorkMode] = useState('remote');
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState('Worldwide');
 
   const generateMutation = useMutation({
     mutationFn: async () => {
