@@ -18,7 +18,7 @@ export function MessagesPage() {
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
-      <div className={cn('w-[340px] shrink-0 border-r border-border flex flex-col', selectedConversation && 'hidden md:flex')}>
+      <div className={cn('w-full md:w-[340px] shrink-0 border-r border-border flex flex-col', selectedConversation && 'hidden md:flex')}>
         <ConversationList onSelect={setSelectedConversation} selectedId={selectedConversation} onNewMessage={() => setShowNewMessage(true)} />
       </div>
       <div className={cn('flex-1 flex flex-col', !selectedConversation && 'hidden md:flex')}>
