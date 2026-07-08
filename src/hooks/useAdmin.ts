@@ -139,6 +139,23 @@ export function useApproveJob() {
   });
 }
 
+export function useBulkApproveJobs() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (jobIds: string[]) => adminService.bulkApproveJobs(jobIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'pending-jobs'] });
+      queryClient.invalidateQueries({ queryKey: adminKeys.stats });
+      toast({ variant: 'success', title: 'Jobs approved' });
+    },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Failed to approve jobs', description: error.response?.data?.message });
+    },
+  });
+}
+
 export function useRejectJob() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -152,6 +169,22 @@ export function useRejectJob() {
     },
     onError: (error: any) => {
       toast({ variant: 'error', title: 'Failed to reject', description: error.response?.data?.message });
+    },
+  });
+}
+
+export function useBulkRejectJobs() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (jobIds: string[]) => adminService.bulkRejectJobs(jobIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'pending-jobs'] });
+      toast({ variant: 'info', title: 'Jobs rejected' });
+    },
+    onError: (error: any) => {
+      toast({ variant: 'error', title: 'Failed to reject jobs', description: error.response?.data?.message });
     },
   });
 }

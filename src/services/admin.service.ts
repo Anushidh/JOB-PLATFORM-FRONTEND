@@ -25,8 +25,14 @@ export const adminService = {
   approveJob: (jobId: string) =>
     api.patch<ApiResponse<{ job: Job }>>(`/admin/jobs/${jobId}/approve`),
 
+  bulkApproveJobs: (jobIds: string[]) =>
+    api.patch<ApiResponse<{ jobs: Job[] }>>('/admin/jobs/bulk-approve', { jobIds }),
+
   rejectJob: (jobId: string, reason?: string) =>
     api.patch<ApiResponse<{ job: Job }>>(`/admin/jobs/${jobId}/reject`, { reason }),
+
+  bulkRejectJobs: (jobIds: string[]) =>
+    api.patch<ApiResponse<{ jobs: Job[] }>>('/admin/jobs/bulk-reject', { jobIds }),
 
   getPlatformStats: () =>
     api.get<ApiResponse<{ stats: any }>>('/admin/stats'),

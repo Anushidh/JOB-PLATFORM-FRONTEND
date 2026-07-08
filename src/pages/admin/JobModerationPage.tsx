@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   Container, Stack, Text, Button, Badge, Surface, Spinner, EmptyState, useToast,
 } from '@/components/ui';
-import { usePendingJobs, useApproveJob, useRejectJob } from '@/hooks/useAdmin';
+import { usePendingJobs, useApproveJob, useRejectJob, useBulkApproveJobs, useBulkRejectJobs } from '@/hooks/useAdmin';
 import type { Job, Company } from '@/types';
 import { Shield, CheckCircle, XCircle, Building2, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -13,13 +13,39 @@ export function JobModerationPage() {
   const { data, isLoading } = usePendingJobs({ page, limit: 10 });
   const approveMutation = useApproveJob();
   const rejectMutation = useRejectJob();
+  const bulkApproveMutation = useBulkApproveJobs();
+  const bulkRejectMutation = useBulkRejectJobs();
+
+  const handleBulkApprove = () => {
+    if (!data?.data) return;
+    const jobIds = data.data.map((job) => job._id);
+    if (jobIds.length > 0) bulkApproveMutation.mutate(jobIds);
+  };
+
+  const handleBulkReject = () => {
+    if (!data?.data) return;
+    const jobIds = data.data.map((job) => job._id);
+    if (jobIds.length > 0) bulkRejectMutation.mutate(jobIds);
+  };
 
   return (
     <Container size="xl" className="py-6">
       <Stack gap={6}>
-        <div>
-          <Text variant="h2">Job Moderation</Text>
-          <Text variant="body" color="secondary" className="mt-1">Review and approve pending job listings</Text>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <Text variant="h2">Job Moderation</Text>
+            <Text variant="body" color="secondary" className="mt-1">Review and approve pending job listings</Text>
+          </div>
+          {data?.data && data.data.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleBulkApprove} loading={bulkApproveMutation.isPending} leftIcon={<CheckCircle className="size-4" />}>
+                Approve All
+              </Button>
+              <Button variant="outline" className="text-danger-600 hover:bg-danger-50 hover:border-danger-200 hover:text-danger-700" onClick={handleBulkReject} loading={bulkRejectMutation.isPending} leftIcon={<XCircle className="size-4" />}>
+                Reject All
+              </Button>
+            </div>
+          )}
         </div>
 
         {isLoading ? (
