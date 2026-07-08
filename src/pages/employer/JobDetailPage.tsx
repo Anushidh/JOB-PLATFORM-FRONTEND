@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Container, Stack, Text, Button, Badge, Surface, Spinner, useToast,
+  Container, Stack, Text, Button, Badge, Surface, Spinner, useToast, Modal, ModalHeader, ModalBody, ModalFooter,
 } from '@/components/ui';
 import { useJob, useChangeJobStatus, useDeleteJob } from '@/hooks/useJobs';
 import type { Job, Company } from '@/types';
@@ -23,6 +24,7 @@ export function EmployerJobDetailPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const { data: job, isLoading } = useJob(jobId);
   const changeStatusMutation = useChangeJobStatus(jobId!);
@@ -61,11 +63,16 @@ export function EmployerJobDetailPage() {
   };
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this job?')) {
-      deleteMutation.mutate(jobId!, {
-        onSuccess: () => navigate('/employer/jobs'),
-      });
-    }
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    deleteMutation.mutate(jobId!, {
+      onSuccess: () => {
+        setIsDeleteModalOpen(false);
+        navigate('/employer/jobs');
+      },
+    });
   };
 
   return (
@@ -215,6 +222,19 @@ export function EmployerJobDetailPage() {
           </div>
         </Surface>
       </Stack>
+
+      <Modal open={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} size="md">
+        <ModalHeader onClose={() => setIsDeleteModalOpen(false)}>Delete Job</ModalHeader>
+        <ModalBody>
+          <Text variant="body" color="secondary">
+            Are you sure you want to delete this job? This action cannot be undone and all associated applications will be permanently closed.
+          </Text>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="ghost" onClick={() => setIsDeleteModalOpen(false)}>Cancel</Button>
+          <Button variant="danger" loading={deleteMutation.isPending} onClick={confirmDelete}>Delete Job</Button>
+        </ModalFooter>
+      </Modal>
     </Container>
   );
 }
