@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle2, AlertCircle, AlertTriangle, Info } from 'lucide-react';
 
@@ -68,9 +69,9 @@ function ToastContainer({
   toasts: Toast[];
   onDismiss: (id: string) => void;
 }) {
-  return (
+  return createPortal(
     <div
-      className="fixed top-6 right-6 z-toast flex flex-col gap-3 max-w-[380px] w-full pointer-events-none"
+      className="fixed top-6 right-6 z-9999 flex flex-col gap-3 max-w-[380px] w-full pointer-events-none"
       aria-live="polite"
       aria-atomic="false"
     >
@@ -79,7 +80,8 @@ function ToastContainer({
           <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
         ))}
       </AnimatePresence>
-    </div>
+    </div>,
+    document.body
   );
 }
 
