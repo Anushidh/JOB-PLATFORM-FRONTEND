@@ -47,22 +47,22 @@ export function AnalyticsPage() {
               <Surface variant="elevated" padding="lg">
                 <Text variant="h5" className="mb-4">Per-Job Breakdown</Text>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left">
+                  <table className="w-full min-w-[600px] text-left">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="pb-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider">Job Title</th>
-                        <th className="pb-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider text-right">Views</th>
-                        <th className="pb-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider text-right">Clicks</th>
-                        <th className="pb-3 text-xs font-semibold text-foreground-muted uppercase tracking-wider text-right">Applications</th>
+                        <th className="pb-3 pr-4 text-xs font-semibold text-foreground-muted uppercase tracking-wider whitespace-nowrap">Job Title</th>
+                        <th className="pb-3 px-4 text-xs font-semibold text-foreground-muted uppercase tracking-wider text-right whitespace-nowrap">Views</th>
+                        <th className="pb-3 px-4 text-xs font-semibold text-foreground-muted uppercase tracking-wider text-right whitespace-nowrap">Clicks</th>
+                        <th className="pb-3 pl-4 text-xs font-semibold text-foreground-muted uppercase tracking-wider text-right whitespace-nowrap">Applications</th>
                       </tr>
                     </thead>
                     <tbody>
                       {analytics.jobStats.map((stat: any) => (
                         <tr key={stat.jobId} className="border-b border-border last:border-0">
-                          <td className="py-3"><Text variant="body-sm" className="font-medium">{stat.title}</Text></td>
-                          <td className="py-3 text-right"><Text variant="body-sm" color="secondary">{stat.views}</Text></td>
-                          <td className="py-3 text-right"><Text variant="body-sm" color="secondary">{stat.clicks}</Text></td>
-                          <td className="py-3 text-right"><Text variant="body-sm" className="font-medium">{stat.applications}</Text></td>
+                          <td className="py-3 pr-4"><Text variant="body-sm" className="font-medium min-w-[200px] block">{stat.title}</Text></td>
+                          <td className="py-3 px-4 text-right"><Text variant="body-sm" color="secondary">{stat.views}</Text></td>
+                          <td className="py-3 px-4 text-right"><Text variant="body-sm" color="secondary">{stat.clicks}</Text></td>
+                          <td className="py-3 pl-4 text-right"><Text variant="body-sm" className="font-medium">{stat.applications}</Text></td>
                         </tr>
                       ))}
                     </tbody>
