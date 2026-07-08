@@ -112,7 +112,7 @@ export function CompanyDetailsPage() {
           {/* Main Content Area */}
           <div className="lg:col-span-2">
             <Stack gap={6}>
-              <Surface variant="flat" padding="lg">
+              <div>
                 <Text variant="h4" className="mb-4">About {company.name}</Text>
                 {company.description ? (
                   <Text variant="body" className="whitespace-pre-wrap leading-relaxed text-foreground-muted">
@@ -121,7 +121,7 @@ export function CompanyDetailsPage() {
                 ) : (
                   <Text variant="body" color="secondary" className="italic">No description provided.</Text>
                 )}
-              </Surface>
+              </div>
 
               <div>
                 <Text variant="h4" className="mb-4">Active Jobs</Text>
