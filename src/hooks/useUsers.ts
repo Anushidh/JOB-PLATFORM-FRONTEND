@@ -92,6 +92,7 @@ export function useUpdateEmployerProfile() {
       const updated = response.data.data!;
       setUser(updated.user, role!);
       queryClient.invalidateQueries({ queryKey: userKeys.profile });
+      queryClient.invalidateQueries({ queryKey: userKeys.profileCompletion });
       toast({ variant: 'success', title: 'Profile updated' });
     },
     onError: (error: any) => {
