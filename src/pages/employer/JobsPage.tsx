@@ -111,34 +111,34 @@ function EmployerJobCard({ job }: { job: Job }) {
 
   return (
     <Surface variant="elevated" padding="md">
-      <div className="flex items-center gap-4">
+      <div className="flex items-start gap-3 sm:gap-4">
         {/* Icon */}
-        <div className="flex size-10 items-center justify-center rounded-lg bg-primary-50 shrink-0">
+        <div className="flex size-10 items-center justify-center rounded-lg bg-primary-50 shrink-0 mt-0.5">
           <Briefcase className="size-5 text-primary-600" />
         </div>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <Link to={`/employer/jobs/${job._id}`} className="hover:underline">
+            <Link to={`/employer/jobs/${job._id}`} className="hover:underline truncate min-w-0">
               <Text variant="subtitle" className="truncate">{job.title}</Text>
             </Link>
-            <Badge variant={config.variant} size="sm" dot>{config.label}</Badge>
+            <Badge variant={config.variant} size="sm" dot className="shrink-0">{config.label}</Badge>
           </div>
-          <div className="flex items-center gap-3 mt-0-5">
-            <Text variant="caption" color="muted">{job.location}</Text>
-            <span className="text-foreground-muted">·</span>
-            <Text variant="caption" color="muted">Posted {postedDate}</Text>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2 mt-1">
+            <Text variant="caption" color="muted" className="truncate">{job.location}</Text>
+            <span className="text-foreground-muted hidden sm:inline">·</span>
+            <Text variant="caption" color="muted" className="shrink-0">Posted {postedDate}</Text>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="hidden sm:flex items-center gap-5 shrink-0">
+        <div className="hidden sm:flex items-center gap-5 shrink-0 pt-1">
           <StatPill icon={<Users />} value={job.applicationsCount} label="Applicants" />
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 pt-1">
           <Link to={`/employer/jobs/${job._id}/applications`}>
             <Button variant="outline" size="xs">View Applicants</Button>
           </Link>
