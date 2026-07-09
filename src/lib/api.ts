@@ -43,8 +43,19 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const isAuthAction = 
+      originalRequest.url?.includes('/login') ||
+      originalRequest.url?.includes('/register') ||
+      originalRequest.url?.includes('/verify-otp') ||
+      originalRequest.url?.includes('/forgot-password') ||
+      originalRequest.url?.includes('/reset-password') ||
+      originalRequest.url?.includes('/logout');
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isAuthAction
+    ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
